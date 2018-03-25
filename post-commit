@@ -1,0 +1,11 @@
+#!/bin/bash
+
+NOTES_DIR="$HOME/OneDrive/Notas"
+
+for full_file_path in `find $PWD -name "*.md"`; do
+    FILE_PATH=`basename $full_file_path`
+
+    if [[ $FILE_PATH != 'README.md' ]] && [[ ! -L "$NOTES_DIR/$FILE_PATH" ]]; then
+        ln -s $full_file_path "$NOTES_DIR/$FILE_PATH"
+    fi
+done
