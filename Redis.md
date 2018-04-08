@@ -134,3 +134,47 @@ OK
 > ZREM my-o-set bar
 (integer) 1
 ```
+
+## Voting system
+
+[On Redis playground](http://github.com/thiagoa/redis-playground)
+
+## Use cases
+
+To write session, temporary, or data with high-throughput needed.
+
+```ruby
+def update_token(conn, token, user, item: nil)
+  timestamp = Time.now.to_i
+  conn.hset 'login:', token, user
+  conn.zadd 'recent:', timestamp, token
+
+  if item
+    conn.zadd "viewed:#{token}", timestamp, item
+
+    # Keep most recent 25 viewed items
+    conn.zremrangebyrank "viewed:#{token}", 0, -26
+  end
+end
+
+LIMIT = 10_000_000
+
+def clean_sessions(conn)
+  loop do
+    size = conn.zcard('recent:')
+
+    if size <= LIMIT
+      sleep 1
+      next
+    end
+
+    end_index = [size - LIMIT, 100].min
+    tokens = conn.zrange('recent:', 0, end_index - 1)
+    session_keys = tokens.map { |t| "viewed:#{t}" }
+
+    conn.delete(*session_keys)
+    conn.hdel 'login:', *tokens
+    conn.zrem 'recent:', *tokens
+  end
+end
+```
