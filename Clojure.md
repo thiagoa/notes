@@ -36,16 +36,10 @@
 |---------|---------------------------------------------------------------|
 | C-( (   | Wraps in parenthesis. (to-regex _str k) -> (to-regex (str k)) |
 | M-s     | Splice current parenthesis                                    |
-
-## Workflow
-
-### Installing packages
-
-Add the package to `project.clj` and run:
-
-```sh
-lein deps
-```
+| C-S-0   | Slurps (expands) the next outer Sexp                          |
+| C-S-9   | Slurps the prev outer Sexp                                    |
+| C-S-]   | Barfs out (contracts) the next Sexp - Opposite of slurping    |
+| C-S-[   | Barfs out the prev Sexp - Opposite of slurping                |
 
 ## Vim
 
@@ -57,18 +51,40 @@ lein deps
 | c1m{motion} | Expands macros 1 time            |
 | cm{motion}  | Expands macros                   |
 
+## Workflow
+
+### Installing packages
+
+Add the package to `project.clj` and run:
+
+```sh
+lein deps
+```
+
 
 ## Misc
 
-In Clojure, keywords can be casted to functions. The `:a` keyword is behaving like a function:
+In Clojure, keywords can be casted to functions. In the following example, the
+`:a` keyword behaves like a function:
 
 ```clj
-(:a {:a 1}) ; Returns 1
+;; Returns 1
+(:a {:a 1})
+```
+
+The interface for a function is `clojure.lang.IFn`. Some values can't be coerced to functions:
+
+```clj
+;; ClassCastException java.base/java.lang.String cannot be cast to clojure.lang.IFn
+("exec" "this")
 ```
 
 And data structures can also be casted to functions:
 
-({:a 1} :a) ; Returns 1
+```clj
+;; Returns 1
+({:a 1} :a)
+```
 
 A vector is a `clojure.lang.PersistentVector`. A list is a `clojure.lang.PersistentList`:
 
@@ -88,7 +104,7 @@ The key name to Clojure's immutable data structures is "persistent".
 
 Check [this](https://yobriefca.se/blog/2014/05/19/the-weird-and-wonderful-characters-of-clojure) out.
 
-### Run tests anywhere
+### Testing tips
 
 Given the following code:
 
@@ -100,14 +116,15 @@ Given the following code:
   (is (= 1 2)))
 ```
 
-Press `C-c M-n` in Emacs to switch to current namespace, `C-c C-k` to compile the file, and in the repl:
+You can press `C-c M-n` in Emacs to switch namespaces, and `C-c C-k` to compile the file. And in the repl:
 
 ```clj
 ;; *ns* refers to the current namespace
 (test-ns *ns*)
 ```
 
-What if you remove a test from the file and don't want to run it anymore? The test will still be in memory, so you must unload the testing namespace:
+What if you remove a test from the file and no longer want to run it? The test
+will still be in memory, so you must unload the testing namespace:
 
 ```clj
 (remove-ns 'clojure-noob.run-tests)
@@ -143,6 +160,27 @@ Grabbing the `doc` function:
 ### Last commands
 
 `*1`, `*2`, `*3`, `*e` for last exception
+
+## Web Development
+
+### Ring
+
+Ring has 3 basic concepts:
+
+- Adapters: They adapt existing JVM webserver libraries (like jetty) to be compatible
+  with the Ring specification. They take an HTTP request, convert it into a standard ring request, and pass it
+  to a handler.
+- Handlers: They receive a ring request and return a ring response. The adapter converts the ring response into
+  an HTTP response.
+- Middleware: They take a handler and return *another* handler. The signature is `[hdlr & options]`.
+
+### Compojure
+
+Compojure is useful for:
+
+- Routing.
+- HTTP method switching.
+- Making Ring responses easier to generate.
 
 ## Namespaces & Require
 
@@ -473,7 +511,7 @@ Implement `map` over `reduce`:
     (pos? n) (conj "positive")))
 ```
 
-## Pattern matching and destructuring
+## Destructuring
 
 Destructuring vectors:
 
@@ -482,9 +520,58 @@ Destructuring vectors:
 (let [[a b] [1 2]] [a b]) ; [1 2]
 ```
 
-Accept options with default values:
+Any `ISeq` will work with destructuring. There doesn't need to be a 1-1
+correspondence:
 
 ```clj
+(let [[a] [1 2]] a) ; 1
+```
+
+Map destructuring is tricky:
+
+```clj
+;; Keys and values need to be inverted!
+(defn func [{foo :foo bar :bar}] [foo bar])
+(func {:foo 1 :bar 2}) ; [1 2]
+
+(defn func [{:foo foo bar :bar}] [foo bar]) ;; RuntimeException
+
+;; Destructuring a nested map
+(defn func [{{bar :bar} :foo}] [bar])
+(func {:foo {:bar 1}}) ; 1
+
+;; We can use the ":keys" syntax as a shortcut to destructure a map.
+;; This is special clojure syntax that won't class with a possible
+;; key of the same name (remember: keys and values need to be inverted)
+(defn func [{:keys [:bar]}] bar)
+(func {:bar 1}) ; 1
+
+;; We can mix and match map destructure syntaxes
+(defn character-desc [{:keys [name gender] age-in-years :age}]
+  [name gender age-in-years])
+
+(character-desc {:name "Thiago", :gender "M", :age 20}) ;; ["Thiago" "M" 20]
+
+;; We can get the whole value with ":as"
+(defn func [{{bar :bar} :foo :as m}]
+  (println "bar is" bar "and the whole map is" m))
+
+(defn func [[one two :as full-vector]] full-vector)
+
+;; Given the following readers, how to get to ["Jane" "Austen"]? With
+;; destructuring it would be an unreadable mess.
+(def readers [
+  {:name "Charlie", :fav-book {:title "Carrie", :author ["Stephen" "King"]}}
+  {:name "Jennifer", :fav-book {:title "Emma", :author ["Jane" "Austen"]}}])
+
+;; How about this?
+(get-in st [1 :fav-book :author])
+
+;; Or this
+(let [[_ second-reader] readers]
+  (get-in second-reader [:fav-book :author]))
+
+;; What about default values? There you have it
 (defn func-with-default-opts [arg1 & {:keys [arg2] :or {arg2 10}}]
   (println arg1 arg2))
 
@@ -492,6 +579,10 @@ Accept options with default values:
 (func-with-default-opts 20 :arg2 30) ; Prints 20 30
 ```
 
+IMPORTANT: Destructuring does not work with `def`. Instead, you should use `def` + `let`
+and bind `def` to an already destructured value.
+
+You can mix and match `:as` with `:or`, etc.
 
 ## Polymorphism
 
@@ -715,6 +806,68 @@ We can use the generic `conj` function (which works on other data structures) wi
 ```clj
 (conj '(2 3 4 5) 1) ; Returns '(1 2 3 4 5)
 ```
+
+### Lazy sequences
+
+```clj
+;; repeat is lazy
+(first (repeat "value")) ;; "value"
+(nth (repeat "value") 1000 ;; "value"
+
+;; take is lazy; cycle and iterate are lazy.
+(take 3 (repeat value)) ;; ("value" "value" "value")
+(take 7 (cycle [1 2 3]) ;; (1 2 3 1 2 3 1)
+(take 3 (iterate inc 1)) ;; (1 2 3)
+(take 3 (iterate inc 2)) ;; (2 3 4)
+
+; prints seq of 1 until 20; only 20 iterations!
+(println (take 20 (take 1000000000 (iterate inc 1))))
+
+;; map is lazy
+(take 10 (map #(* % %) (iterate inc 1))) ; (1 4 9 16 25 36 49 64 81 100)
+
+;; A lot of lazy computing combined!
+(def first-names ["Bob" "Joe" "Mike"])
+(def last-names ["Armstrong" "Bolanos" "Tyson"])
+(defn name-for [first last] (str first " " last))
+(def authors (map name-for (cycle first-names) (cycle last-names)))
+(def titles (map #(str "Wheel of time, Book " %) (iterate inc 1)))
+(defn make-book [title author] {:author author :title title})
+(def books (map make-book titles authors))
+(take 2 books)
+;; ({:author "Bob Armstrong", :title "Wheel of time, Book 1"}
+;;  {:author "Joe Bolanos", :title "Wheel of time, Book 2"})
+
+(lazy-seq [1 2 3]) ;; Holds off evaluation
+
+;; Building repeat, iterate, and map from scratch:
+(defn my-repeat [x] (cons x (lazy-seq (my-repeat x))))
+(defn my-iterate [f x] (cons x (lazy-seq (my-iterate f (f x)))))
+(defn my-map [f col]
+  (when-not (empty? col)
+    (cons
+	  (f (first col))
+	  (lazy-seq (my-map f (rest col))))))
+
+;; Seq and doall force evaluation of the lazy sequence. Useful for side-effects.
+(seq (map slurp (map #(str "file" %) (range 1 10))))
+(doall (map slurp (map #(str "file" %) (range 1 10))))
+
+;; But why is this?
+(class (doall (take 5 (repeat "5")))) ;; clojure.lang.LazySeq
+
+(def foo (map println [1 2 3])) ;; does not consume the sequence
+(def foo (doall (map println [1 2 3]))) ;; consumes the sequence and prints stuff
+
+(take 4 (repeatedly (println "oi")))
+(take 5 (repeatedly (fn [] 1)))
+```
+
+- `for` is similar to `doseq`, but `for` is lazy and `doseq` is eager.
+- Not all lazy sequences are unbounded. They can be finite or infinite.
+- Do not `count` nor `sort` nor `reduce` over a lazy sequence. These functions
+  are eager.
+
 
 ### Vectors
 
