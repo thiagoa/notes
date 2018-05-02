@@ -600,13 +600,135 @@ You can mix and match `:as` with `:or`, etc.
 
 We are using `:genre` as a dispatcher function, but any dispatcher function will do.
 
-### Protocols
+### Records and Protocols
+
+Given the following record definition:
+
+```clj
+(defrecord Person [name age])
+```
+
+It generates two new functions:
+
+```clj
+(def thiago (->Person "Thiago" 25))
+(def robert (map->Person {:name "Robert", :age 75}))
+```
+
+You can have *other* fields in a record instance. But they will not have optimized access:
+
+```clj
+(def wtf (map->Person {:name "WTF", :age 10, :wtf "included!"}))
+(:wtf wtf) ; "included!"
+```
+
+A record works like a map:
+
+```clj
+(def older-robert (assoc robert :age 76))
+(def wtf-bro (assoc wtf :yes "It's true"))
+
+(count wtf) ;; 3
+(keys wtf) ;; (:name :age :wtf)
+```
+
+A record has a class:
+
+
+```clj
+(class wtf) ;; my-ns.Person
+(instance? Person wtf) ;; true
+```
+
+Given the following protocol:
+
+```clj
+(defprotocol Being
+  (identification [this])
+  (description [this])
+  (greeting [this message]))
+```
+
+We can define a record-specific implementation for it:
+
+```clj
+(defrecord Animal [name type age wild? sound]
+  Being
+  (identification [this]
+    ;; Woops! We can call `name` instead of `(:name this)`
+    (str name " is a " type))
+  (description [this]
+    (if (:wild? this)
+      "Is a wild animal"
+      "Is not a wild animal"))
+  (greeting [this message]
+    (str type " says " message)))
+
+(defrecord Person [name age good-boy?]
+  Being
+  (identification [this]
+    (str name " has " (:age this) " years"))
+  (description [this]
+    (if (:good-boy? this)
+      "Is a good boy"
+      "Is not a good boy"))
+  (greeting [this message]
+    (str name " says " message)))
+```
+
+> P.S.: We can define more than one protocol per record definition at once (syntax omitted for brevity).
+
+To use the protocol functions:
+
+```clj
+(def thiago (->Person "Thiago" 18 true))
+(def cow (->Animal "Milky", "Cow", 5, false, "Moo!"))
+
+(identification thiago) ;; Thiago has 18 years
+(description thiago) ;; Is a good boy
+(greeting cow "Moo!") ;; Cow says Moo!
+```
+
+You can extend a record with another Protocol without having to alter the original definition:
+
+```clj
+;;Nonsense example
+(defprotocol Ageable
+  (next-age [this]))
+
+(extend-protocol Ageable
+  Person
+  (next-age [this] (+ (:age this) 1))
+  Animal
+  (next-age [this] (+ (:age this) 5)))
+
+(next-age thiago) ; 19
+(next-age cow) ; 10
+```
+
+Protocols can be used for any types, even built-in types:
 
 ```clj
 (defprotocol ToUrl (to-url [x]))
 
-(extend-protocol ToUrl java.io.File (to-url [f] (.toString f)))
+(extend-protocol ToUrl
+  java.io.File
+  (to-url [f] (.toString f)))
 ```
+
+You can have a one-off implementation of a protocol (useful for testing):
+
+```clj
+;; reify does not require implementing the whole protocol
+(def one-off-impl (reify Ageable (next-age [this] 25)))
+(next-age one-off-impl)
+```
+
+Misc:
+
+- Protocols and multimethods are much the same, but multimethods are more generic.
+- Be careful with function name collisions
+- `deftype` is the more generic cousing to `defrecord`
 
 ## Error handling
 
