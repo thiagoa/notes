@@ -182,6 +182,173 @@ Compojure is useful for:
 - HTTP method switching.
 - Making Ring responses easier to generate.
 
+
+## Testing
+
+You can have different contexts within a single test:
+
+```clj
+(ns my-app.core-test
+  (:require [clojure.test :refer :all]))
+
+(deftest test-suite-name
+  (testing "Set 1"
+    (is (= 1 1)))
+  (testing "Set 2"
+    (is (= 2 1))))
+```
+
+`deftest` generates a function under the curtains:
+
+```clj
+(require '[my-app.core-test :as ct])
+
+;; Throws exception or returns nil
+(ct/test-suite-name)
+```
+
+To run tests for a namespace:
+
+```clj
+(run-tests 'my-app.core-test)
+```
+
+You can run parameterized tests with `are`:
+
+```clj
+
+(deftest test-add
+  (are [x y] (= x y)
+    (+) 0
+    (+ 1) 1
+    (+ 1 2) 3))
+```
+
+### Property-Based testing
+
+First, Install the `core.clojure/test.check` package. Then import the `generators` namespace:
+
+```clj
+(require '[clojure.test.check.generators :as gen])
+
+(gen/sample gen/pos-int 20) ;; Generates 20 random positive integers
+(gen/sample gen/string-alphanumeric) ;; Generates 10 random alnum strings
+```
+
+Other generators:
+
+- `gen/goolean`
+- `gen/int`
+- `gen/keyword`
+- etc.
+
+We can plug in predicates to generate custom generators:
+
+```clj
+(def numbers-greater-than-zero
+  (gen/such-that (complement zero?) gen/pos-int))
+
+(gen/sample  numbers-greater-than-zero) ;; Generates 10 numbers
+```
+
+We can even generate maps:
+
+```clj
+(def numbers-greater-than-zero
+  (gen/such-that (complement zero?) gen/pos-int))
+
+(def non-empty-string-gen
+  (gen/such-that not-empty gen/string-alphanumeric))
+
+(def books-map-gen
+  (gen/hash-map
+   :title non-empty-string-gen
+   :author non-empty-string-gen
+   :copies numbers-greater-than-zero))
+
+(gen/sample books-map-gen)
+```
+
+Or vectors with a random number of non-empty maps:
+
+```clj
+(def inventory-gen
+  (gen/not-empty (gen-vector books-map-gen)))
+```
+
+Pick a random book from each vector:
+
+```clj
+;; gen/elements picks a random item
+(def inventory-each-with-a-random-book-gen
+  (gen/let [inventory inventory-gen
+            book (gen/elements inventory)]
+    { :inventory inventory, :book book }))
+
+(gen/sample inventory-each-with-a-random-book)
+```
+
+With that we can test a function that finds books by title:
+
+```clj
+(ns inventory.other-test
+  (:require [clojure.test :refer :all]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :as ctest]
+            [clojure.test.check.generators :as gen]))
+
+(def numbers-greater-than-zero-gen
+  (gen/such-that (complement zero?) gen/pos-int))
+
+(def non-empty-string-gen
+  (gen/such-that not-empty gen/string-alphanumeric))
+
+(def books-map-gen
+  (gen/hash-map
+   :title non-empty-string-gen
+   :author non-empty-string-gen
+   :copies numbers-greater-than-zero-gen))
+
+(def inventory-gen
+  (gen/not-empty (gen/vector books-map-gen)))
+
+(def inventory-each-with-a-random-book-gen
+  (gen/let [inventory inventory-gen
+            book (gen/elements inventory)]
+    { :inventory inventory, :book book }))
+
+(defn find-by-title
+  "Given a books hash-map vector, finds a book by title"
+  [title books]
+  (some
+   #(when (= (:title %) title) %)
+   books))
+
+(defn find-by-title-in-sample-data
+  [sample]
+  (find-by-title (-> sample :book :title) (:inventory sample)))
+
+;; Generates 50 samples to test against
+(ctest/defspec find-by-title-finds-books 50
+  (prop/for-all [sample inventory-each-with-a-random-book-gen]
+                (= (find-by-title-in-sample-data sample)
+                   (:book sample))))
+```
+
+Or we could do just a quick check:
+
+```clj
+(require '[clojure.test.check :as tc])
+
+;; Returns {:result true, :number-of-tests 50, :seed 23432423
+;; Otherwise, returns a false result along with the failed tests)
+(tc/quick-check
+ 50
+ (prop/for-all [sample inventory-each-with-a-random-book-gen]
+               (= (find-by-title-in-sample-data sample)
+                  (:book sample))))
+```
+
 ## Namespaces & Require
 
 - Namespaces are just big name/value lookup tables.
