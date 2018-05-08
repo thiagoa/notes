@@ -33,7 +33,13 @@ Some commands are bound to my specific setup.
 | C-x h          | Select entire buffer |
 | C-x 0          | Delete window |
 | C-c <Left>     | Cycle between window layouts |
-| C-c <Right>     | Cycle between window layouts |
+| C-c <Right>    | Cycle between window layouts |
+
+## Projectile
+
+| Command        | Description                      |
+|----------------|----------------------------------|
+| C-c p t        | Switch between test and impl     |
 
 ## Magit
 

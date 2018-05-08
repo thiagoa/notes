@@ -29,6 +29,7 @@
 | q         | Quit cider-error                  |
 | C-c C-t n | Run all NS tests                  |
 | C-c C-t t | Run one test                      |
+| C-c C-t r | Re-run failed tests               |
 
 ### Paredit
 
@@ -349,6 +350,80 @@ Or we could do just a quick check:
                   (:book sample))))
 ```
 
+## Clojure spec
+
+```clj
+(ns playground.core
+  (:require [clojure.spec.alpha :as s]
+            [orchestra.spec.test :as st]))
+
+(defn slice
+  [m ks]
+  (reduce (fn [acc k]
+            (if-let [v (get m k)]
+              (assoc acc k v)
+              acc))
+          {}
+          ks))
+
+(s/fdef slice
+        :args (s/cat :m map?
+                     :ks (s/coll-of any?))
+        :fn (fn [ctx]
+              (= (into #{} (-> ctx :args :ks))
+                 (into #{} (-> ctx :ret keys))))
+        :ret map?)
+
+(st/instrument `slice)
+
+(slice {:a false :b 1} [:a])
+```
+
+The last line will reveal a bug in the function:
+
+```
+ExceptionInfo Call to #'playground.core/slice did not conform to spec:
+val: {:ret {}, :args {:m {:a false}, :ks [:a]}} fails at: [:fn] predicate: (fn [ctx] (= (into #{} (-> ctx :args :ks)) (into #{} (-> ctx :ret keys))))
+  clojure.core/ex-info (core.clj:4739)
+```
+
+It will not extract the value for `:a` because `false` is not truthy. Replace `if-let` with `if-some` to fix it.
+
+`clojure.spec` instrumentation only validates incoming `:args`. To validate `:fn` and `:ret`, use `orchestra`.
+
+A better spec for the `slice` function would be:
+
+```clj
+(defn slice [m ks]
+  (reduce (fn [acc k]
+            (if-some [v (get m k)]
+              (assoc acc k v)
+              acc))
+          {}
+          ks))
+
+(defn slice-ret-keys-validator [ctx]
+  (let [intersect
+        (se/intersection
+         (-> ctx :args :ks set)
+         (-> ctx :args :m keys set))]
+    (= intersect (-> ctx :ret keys set))))
+
+(s/fdef slice
+        :args (s/cat :m map?
+                     :ks (s/coll-of any?))
+        :fn slice-ret-keys-validator
+        :ret map?)
+```
+
+It accounts for the case when the map does not have the keys we ask for.
+
+And given that we have a specification, we can run a property-based test for it automatically with:
+
+```clj
+(st/check 'playground.core/slice)
+```
+
 ## Namespaces & Require
 
 - Namespaces are just big name/value lookup tables.
@@ -456,7 +531,7 @@ Recur rebinds values declared at the beginning of a loop:
 
 ### Higher order functions
 
-Partial:
+Partial is more of a curry:
 
 ```clj
 (defn my-inc (partial + 1))
