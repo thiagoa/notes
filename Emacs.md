@@ -16,6 +16,11 @@ Some commands are bound to my specific setup.
 
 | Command        | Description                      |
 |----------------|----------------------------------|
+| C-x C-k        | Kill region                      |
+| C-c C-h        | Kill line                        |
+| M-w            | Copy region                      |
+| C-x Ret m      | Help                             |
+| C-c Left/Right | Alternate between window layouts |
 | C-x t          | Helm mode |
 | C-c l          | Next buffer        |
 | C-c h          | Previous buffer        |

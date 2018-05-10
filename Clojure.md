@@ -7,16 +7,6 @@
 - [Basic emacs + cider](https://www.braveclojure.com/basic-emacs/)
 - [Paredit cheatsheet](https://www.emacswiki.org/emacs/PareditCheatsheet)
 
-### General
-
-| Command        | Description                      |
-|----------------|----------------------------------|
-| C-x C-k        | Kill region                      |
-| C-c C-h        | Kill line                        |
-| M-w            | Copy region                      |
-| C-x Ret m      | Help                             |
-| C-c Left/Right | Alternate between window layouts |
-
 ### Cider
 
 | Command   | Description                       |
@@ -37,20 +27,31 @@
 |---------|---------------------------------------------------------------|
 | C-( (   | Wraps in parenthesis. (to-regex _str k) -> (to-regex (str k)) |
 | M-s     | Splice current parenthesis                                    |
-| C-S-0   | Slurps (expands) the next outer Sexp                          |
-| C-S-9   | Slurps the prev outer Sexp                                    |
-| C-S-]   | Barfs out (contracts) the next Sexp - Opposite of slurping    |
-| C-S-[   | Barfs out the prev Sexp - Opposite of slurping                |
+| C-S-0   | Slurps (expands) to the next outer Sexp                          |
+| C-S-9   | Slurps to the prev outer Sexp                                    |
+| C-S-]   | Barfs (contracts) to the next Sexp - Opposite of slurping    |
+| C-S-[   | Barfs to the prev Sexp - Opposite of slurping                |
 
-## Vim
+## Web Development
 
-| Command     | Description                      |
-|-------------|----------------------------------|
-| cpaF        | Evaluate nearest def             |
-| :Console    | Console                          |
-| opt + jk    | Move functions/lists up and down |
-| c1m{motion} | Expands macros 1 time            |
-| cm{motion}  | Expands macros                   |
+### Ring
+
+Ring has 3 basic concepts:
+
+- Adapters: make existing JVM webservers (like jetty) compatible
+  with the Ring specification. They take an HTTP request, convert it into a
+  standard ring request, and pass it to a handler.
+- Handlers: receive a ring request and return a ring response. The adapter converts the ring response into
+  an HTTP response.
+- Middleware: take a handler and return *another* handler. The signature is `[hdlr & options]`.
+
+### Compojure
+
+Compojure is useful for:
+
+- Routing.
+- HTTP method switching.
+- Making Ring responses easier to generate.
 
 ## Workflow
 
@@ -97,7 +98,7 @@ A vector is a `clojure.lang.PersistentVector`. A list is a `clojure.lang.Persist
 (type '(1)) ; clojure.lang.PersistentList
 ```
 
-The key name to Clojure's immutable data structures is "persistent".
+The key to Clojure's immutable data structures is "persistent".
 
 ## General tips
 
@@ -117,15 +118,18 @@ Given the following code:
   (is (= 1 2)))
 ```
 
-You can press `C-c M-n` in Emacs to switch namespaces, and `C-c C-k` to compile the file. And in the repl:
+You can press `C-c M-n` in Emacs to switch namespaces, and `C-c C-k` to compile
+the file. And in the repl:
 
 ```clj
 ;; *ns* refers to the current namespace
 (test-ns *ns*)
 ```
 
-What if you remove a test from the file and no longer want to run it? The test
-will still be in memory, so you must unload the testing namespace:
+Or you can `C-c C-t n`.
+
+What if you delete a test? The test will still be in memory, therefore you must
+unload the namespace to get rid of the ghost:
 
 ```clj
 (remove-ns 'clojure-noob.run-tests)
@@ -144,7 +148,7 @@ Grabbing the `doc` function:
 (doc map)
 ```
 
-### Switch namespace
+### Switch to namespace
 
 ```clj
 (in-ns 'foo)
@@ -161,28 +165,6 @@ Grabbing the `doc` function:
 ### Last commands
 
 `*1`, `*2`, `*3`, `*e` for last exception
-
-## Web Development
-
-### Ring
-
-Ring has 3 basic concepts:
-
-- Adapters: They adapt existing JVM webserver libraries (like jetty) to be compatible
-  with the Ring specification. They take an HTTP request, convert it into a standard ring request, and pass it
-  to a handler.
-- Handlers: They receive a ring request and return a ring response. The adapter converts the ring response into
-  an HTTP response.
-- Middleware: They take a handler and return *another* handler. The signature is `[hdlr & options]`.
-
-### Compojure
-
-Compojure is useful for:
-
-- Routing.
-- HTTP method switching.
-- Making Ring responses easier to generate.
-
 
 ## Testing
 
@@ -204,7 +186,7 @@ You can have different contexts within a single test:
 ```clj
 (require '[my-app.core-test :as ct])
 
-;; Throws exception or returns nil
+;; Throws exception on failure / returns nil on success
 (ct/test-suite-name)
 ```
 
@@ -238,12 +220,12 @@ First, Install the `core.clojure/test.check` package. Then import the `generator
 
 Other generators:
 
-- `gen/goolean`
+- `gen/boolean`
 - `gen/int`
 - `gen/keyword`
 - etc.
 
-We can plug in predicates to generate custom generators:
+You can plug in predicates to create custom generators:
 
 ```clj
 (def numbers-greater-than-zero
@@ -252,7 +234,7 @@ We can plug in predicates to generate custom generators:
 (gen/sample  numbers-greater-than-zero) ;; Generates 10 numbers
 ```
 
-We can even generate maps:
+You can even generate maps:
 
 ```clj
 (def numbers-greater-than-zero
@@ -289,7 +271,7 @@ Pick a random book from each vector:
 (gen/sample inventory-each-with-a-random-book)
 ```
 
-With that we can test a function that finds books by title:
+With that, you can test a function that finds a book by title:
 
 ```clj
 (ns inventory.other-test
@@ -336,7 +318,7 @@ With that we can test a function that finds books by title:
                    (:book sample))))
 ```
 
-Or we could do just a quick check:
+Or you can do a quick sanity check:
 
 ```clj
 (require '[clojure.test.check :as tc])
@@ -416,9 +398,9 @@ A better spec for the `slice` function would be:
         :ret map?)
 ```
 
-It accounts for the case when the map does not have the keys we ask for.
+It accounts for the case when the map does not have the input keys.
 
-And given that we have a specification, we can run a property-based test for it automatically with:
+And given that we have a specification, we can run a property-based test for it automatically:
 
 ```clj
 (st/check 'playground.core/slice)
