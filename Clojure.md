@@ -9,28 +9,31 @@
 
 ### Cider
 
-| Command   | Description                       |
-|-----------|-----------------------------------|
-| C-c C-k   | Compile current file              |
-| C-c C-z   | Alternate between repl and buffer |
-| C-c M-j   | Cider jack in                     |
-| C-c M-n   | Switch to current namespace       |
-| C-l       | Center screen                     |
-| q         | Quit cider-error                  |
-| C-c C-t n | Run all NS tests                  |
-| C-c C-t t | Run one test                      |
-| C-c C-t r | Re-run failed tests               |
+| Command     | Description                                |
+|-------------|--------------------------------------------|
+| C-c C-k     | Compile current file                       |
+| C-c C-z     | Alternate between repl and buffer          |
+| C-c M-j     | Cider jack in                              |
+| C-c M-n     | Switch to current namespace                |
+| C-l         | Center screen                              |
+| q           | Quit cider-error                           |
+| C-c C-t n   | Run all NS tests                           |
+| C-c C-t t   | Run one test                               |
+| C-c C-t r   | Re-run failed tests                        |
+| C-x C-e     | Eval last sexp                             |
+| M-.         | Jump to definition (redef all the things!) |
+| C-c C-d C-d | Jump to docs                               |
 
 ### Paredit
 
 | Command | Description                                                   |
 |---------|---------------------------------------------------------------|
 | C-( (   | Wraps in parenthesis. (to-regex _str k) -> (to-regex (str k)) |
-| M-s     | Splice current parenthesis                                    |
-| C-S-0   | Slurps (expands) to the next outer Sexp                          |
-| C-S-9   | Slurps to the prev outer Sexp                                    |
-| C-S-]   | Barfs (contracts) to the next Sexp - Opposite of slurping    |
-| C-S-[   | Barfs to the prev Sexp - Opposite of slurping                |
+| M-s     | Splice current pnarenthesis                                   |
+| C-S-0   | Slurps (expands) to the next outer Sexp                       |
+| C-S-9   | Slurps to the prev outer Sexp                                 |
+| C-S-]   | Barfs (contracts) to the next Sexp - Opposite of slurping     |
+| C-S-[   | Barfs to the prev Sexp - Opposite of slurping                 |
 
 ## Web Development
 
@@ -44,6 +47,35 @@ Ring has 3 basic concepts:
 - Handlers: receive a ring request and return a ring response. The adapter converts the ring response into
   an HTTP response.
 - Middleware: take a handler and return *another* handler. The signature is `[hdlr & options]`.
+
+#### Tips
+
+Avoid jetty blocking the main thread (and thus the repl) with:
+
+```clj
+(require '[ring.adapter.jetty :refer [run-jetty]])
+
+(defn handler [req]
+  {:status 200
+   :headers {}
+   :body "Some body"})
+
+;; This line already runs the server.
+;; defonce ensures jetty is only run once
+(defonce server
+  (run-jetty handler {:port 3000, :join? false}))
+
+;; This line stops the server using the server reference
+(.stop server)
+```
+
+Make the handler's code automatically reloadable by passing in a var reference instead of the function value:
+
+```clj
+(run-jetty #'handler {:port 3000, :join? false})
+```
+
+Since vars implement `IFn`, they behave as functions.
 
 ### Compojure
 
@@ -1258,9 +1290,35 @@ We can add or replace elements with `assoc`:
 
 Or extract subvectors:
 
-```
+```clj
 (subvec v 1) ; [2 3 4]
 (subvec v 1 2) ; [2]
+```
+
+We can use `some` to check if a value is present in a vector:
+
+```clj
+(some #{Ringo} ["John" "Paul" "George" "Ringo"]) ;; "Ringo"
+```
+
+Be careful when checking for false or nil values! `some` relies on truthiness, so you must be explicit:
+
+```clj
+(some #(= nil %) [1 nil]) ;; true
+```
+
+You may think that `contains?` would work for checking membership, but it does not. It merely checks if the index exists in the vector, which is more useful with a map:
+
+```clj
+(contains? [1] 0) ;; true
+```
+
+`contains?` works on associative collections like vectors and maps:
+
+```clj
+(associative? []) ;; true
+(associative? {}) ;; true
+(associative? #{}) ;; false
 ```
 
 ### Dates
