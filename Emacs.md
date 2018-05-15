@@ -39,6 +39,7 @@ Some commands are bound to my specific setup.
 | C-x 0          | Delete window                         |
 | C-c <Left>     | Cycle between window layouts          |
 | C-c <Right>    | Cycle between window layouts          |
+| C-x g          | Magit status                          |
 
 ## Projectile
 
@@ -48,11 +49,24 @@ Some commands are bound to my specific setup.
 
 ## Magit
 
-- `magit-status` or `m-stat`
-- In status window, `cc` - commit
-- In status window, `C-c C-c` - confirm commit
-- In status window, `s` for stage
-- In status window, `ca` - commit amend
+- `magit-status` or `m-stat` or `C-x g`
+
+In status window:
+
+- `M-n` and `M-p` to navigate between sections
+- `Tab` to toggle details
+- press `g` to refresh
+- `cc` - commit
+- `C-c C-c` - confirm commit
+- `s` for stage
+- `ca` - commit amend
+
+## Seeing is believing
+
+`gem install seeing_is_believing`
+
+- Clear output: `C-c ? c`
+- Run code at cursor: `C-c ? x`
 
 
 ## Interactive buffer area
@@ -61,9 +75,30 @@ Command: `C-x C-b`
 
 - Mark buffers for deletion with `d`
 - Confirm with `x`
+- `g` to regenerate the list of buffers
+- `/ m` to filter files by major mode
+- `u` or `DEL` to unselect buffer
+- `M DEL` + `return` to unselect all.
+- `S` to save selected buffers.
+
+Deleting all buffers:
+
+- With all buffers unselected, press `t` to toggle selection and thus select all.
+- Press `D` to delete all buffers.
+
+### Compilation
+
+```elisp
+(let ((default-directory "/Users/thiagoaraujo/Code/stack/stack-development/stack-api"))
+      (compile "bundle exec rspec" 'rspec-compilation-mode))
+```
 
 ## Elisp
 
 ```elisp
 (message "prints a message")
 ```
+
+## Problems
+
+I've tried to run specs with `C-c , a`, but bundler was dying. The solution was to set the environment variable `$BUNDLE_LOCAL__STACK_FOUNDATION`.
