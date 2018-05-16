@@ -14,32 +14,36 @@ Some commands are bound to my specific setup.
 
 ## Keybindings
 
-| Command        | Description                           |
-|----------------|---------------------------------------|
-| C-x C-k        | Kill region                           |
-| C-c C-h        | Kill line                             |
-| M-w            | Copy region                           |
-| C-x Ret m      | Help                                  |
-| C-c Left/Right | Alternate between window layouts      |
-| C-x t          | Helm mode                             |
-| C-c l          | Next buffer                           |
-| C-c h          | Previous buffer                       |
-| M-H            | Mark paragraph                        |
-| M-i            | Jump to symbol                        |
-| M-r            | Cycle between top, middle, and bottom |
-| M-g g          | Go to line                            |
-| C-c pf         | Fuzzy find file                       |
-| C-M-s          | Regex search                          |
-| M-S-%          | Query replace                         |
-| C-x }          | Increase window width                 |
-| C-x {          | Decrease window width                 |
-| C-x ^          | Increase window height                |
-| M-- M-r        | Go to bottom of the window            |
-| C-x h          | Select entire buffer                  |
-| C-x 0          | Delete window                         |
-| C-c <Left>     | Cycle between window layouts          |
-| C-c <Right>    | Cycle between window layouts          |
-| C-x g          | Magit status                          |
+| Command        | Description                                 |
+|----------------|---------------------------------------------|
+| C-x C-k        | Kill region                                 |
+| C-c C-h        | Kill line                                   |
+| M-w            | Copy region                                 |
+| C-x Ret m      | Help                                        |
+| C-c Left/Right | Alternate between window layouts            |
+| C-x t          | Helm mode                                   |
+| C-c l          | Next buffer                                 |
+| C-c h          | Previous buffer                             |
+| M-H            | Mark paragraph                              |
+| M-i            | Jump to symbol                              |
+| M-r            | Cycle between top, middle, and bottom       |
+| M-g g          | Go to line                                  |
+| C-c pf         | Fuzzy find file                             |
+| C-M-s          | Regex search                                |
+| M-S-%          | Query replace                               |
+| C-x }          | Increase window width                       |
+| C-x {          | Decrease window width                       |
+| C-x ^          | Increase window height                      |
+| M-- M-r        | Go to bottom of the window                  |
+| C-x h          | Select entire buffer                        |
+| C-x 0          | Delete window                               |
+| C-c <Left>     | Cycle between window layouts                |
+| C-c <Right>    | Cycle between window layouts                |
+| C-x g          | Magit status                                |
+| C-u C-SPC      | Pop mark                                    |
+| M-/            | Complete words                              |
+| M-\            | Hippie expand (compl lines and lisp symbols |
+| C-u C-c p f    | Force projectile reload                     |
 
 ## Projectile
 
@@ -60,6 +64,7 @@ In status window:
 - `C-c C-c` - confirm commit
 - `s` for stage
 - `ca` - commit amend
+- `C-u M-x m-stat` to run magit status on another project.
 
 ## Seeing is believing
 
@@ -98,6 +103,13 @@ Deleting all buffers:
 ```elisp
 (message "prints a message")
 ```
+
+## Package management
+
+Deleting a package
+
+- Remove the package from `Cask`
+- `M-x` `package-auto-remove`
 
 ## Problems
 
