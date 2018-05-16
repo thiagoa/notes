@@ -14,36 +14,38 @@ Some commands are bound to my specific setup.
 
 ## Keybindings
 
-| Command        | Description                                 |
-|----------------|---------------------------------------------|
-| C-x C-k        | Kill region                                 |
-| C-c C-h        | Kill line                                   |
-| M-w            | Copy region                                 |
-| C-x Ret m      | Help                                        |
-| C-c Left/Right | Alternate between window layouts            |
-| C-x t          | Helm mode                                   |
-| C-c l          | Next buffer                                 |
-| C-c h          | Previous buffer                             |
-| M-H            | Mark paragraph                              |
-| M-i            | Jump to symbol                              |
-| M-r            | Cycle between top, middle, and bottom       |
-| M-g g          | Go to line                                  |
-| C-c pf         | Fuzzy find file                             |
-| C-M-s          | Regex search                                |
-| M-S-%          | Query replace                               |
-| C-x }          | Increase window width                       |
-| C-x {          | Decrease window width                       |
-| C-x ^          | Increase window height                      |
-| M-- M-r        | Go to bottom of the window                  |
-| C-x h          | Select entire buffer                        |
-| C-x 0          | Delete window                               |
-| C-c <Left>     | Cycle between window layouts                |
-| C-c <Right>    | Cycle between window layouts                |
-| C-x g          | Magit status                                |
-| C-u C-SPC      | Pop mark                                    |
-| M-/            | Complete words                              |
-| M-\            | Hippie expand (compl lines and lisp symbols |
-| C-u C-c p f    | Force projectile reload                     |
+| Command         | Description                                    |
+|-----------------|------------------------------------------------|
+| C-x C-k         | Kill region                                    |
+| C-c C-h         | Kill line                                      |
+| M-w             | Copy region                                    |
+| C-x Ret m       | Help                                           |
+| C-c Left/Right  | Alternate between window layouts               |
+| C-x t           | Helm mode                                      |
+| C-c l           | Next buffer                                    |
+| C-c h           | Previous buffer                                |
+| M-H             | Mark paragraph                                 |
+| M-i             | Jump to symbol                                 |
+| M-r             | Cycle between top, middle, and bottom          |
+| M-g g           | Go to line                                     |
+| C-c pf          | Fuzzy find file                                |
+| C-M-s           | Regex search                                   |
+| M-S-%           | Query replace                                  |
+| C-x }           | Increase window width                          |
+| C-x {           | Decrease window width                          |
+| C-x ^           | Increase window height                         |
+| M-- M-r         | Go to bottom of the window                     |
+| C-x h           | Select entire buffer                           |
+| C-x 0           | Delete window                                  |
+| C-c <Left>      | Cycle between window layouts                   |
+| C-c <Right>     | Cycle between window layouts                   |
+| C-x g           | Magit status                                   |
+| C-u C-SPC       | Pop mark                                       |
+| M-/             | Complete words                                 |
+| M-\             | Hippie expand (compl lines and lisp symbols    |
+| C-u C-c p f     | Force projectile reload                        |
+| C-s C-w C-w ... | Search for word under cursor, expand selection |
+| C-s RET         | Non-incremental search                         |
 
 ## Projectile
 
@@ -59,7 +61,7 @@ In status window:
 
 - `M-n` and `M-p` to navigate between sections
 - `Tab` to toggle details
-- press `g` to refresh
+- `g` to refresh
 - `cc` - commit
 - `C-c C-c` - confirm commit
 - `s` for stage
@@ -72,7 +74,6 @@ In status window:
 
 - Clear output: `C-c ? c`
 - Run code at cursor: `C-c ? x`
-
 
 ## Interactive buffer area
 
@@ -103,6 +104,14 @@ Deleting all buffers:
 ```elisp
 (message "prints a message")
 ```
+
+## Inf ruby
+
+- `inf-ruby-console-auto` figures out the console
+- `C-c C-z` switch between buffer and console
+- `C-x C-e` execute last sexp
+- `C-c C-b` send block
+- `C-x M-b` send block and go
 
 ## Package management
 

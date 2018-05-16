@@ -1,3 +1,3 @@
 # My dev notes
 
-These are notes that I write up myself while studying. 
+Dev stuff to review, remember, or serve as a reference.
