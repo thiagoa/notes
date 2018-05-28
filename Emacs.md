@@ -14,15 +14,11 @@ Some of these commands are specific to my configuration.
 | M-3 M-r         | -                                   | Go to the 3rd visible line (use any number)    |
 | M-/             | dabbrev-expand                      | Auto-complete words                            |
 | M-\             | -                                   | Hippie expand (compl lines and lisp symbols    |
-| C-s C-w C-w ... | isearch-forward                     | Search for word under cursor, expand selection |
 | C-M-f (a or n)  | -                                   | Forward sexp (vary between major mappings)     |
 | C-M-b (e or p)  | -                                   | Backward sexp (vary between major mappings)    |
 | C-M-d           | down-list                           | Move into balanced exp                         |
 | C-M-u           | backward-up-list                    | Move out of balanced exp                       |
 | C-x ;           | comment-or-uncomment-line-or-region | -                                              |
-| C-s RET         |                                     | Non-incremental search                         |
-| C-M-s           | -                                   | Regex search                                   |
-| M-S-%           | -                                   | Query replace                                  |
 
 ## File management
 
@@ -63,6 +59,43 @@ Dired commands:
 | C-c h       | previous-buffer | Previous buffer                                  |
 | S-u         | revert-buffer   | Revert buffer to last save                       |
 | M-i         | ido-goto-symbol | Jump to symbol (varies between modes, langs, etc |
+
+## Search and replace
+
+| Keybinding | Command                 | Description |
+|------------|-------------------------|-------------|
+| C-s        | isearch-forward         | -           |
+| C-r        | isearch-backward        | -           |
+| C-M-s      | regexp-isearch-forward  | -           |
+| C-M-r      | regexp-isearch-backward | -           |
+| C-M-%      | query-replace-regexp    | -           |
+| M-%        | query-replace           | -           |
+
+Once in isearch:
+
+| Keybinding | Command                   | Description                                       |
+|------------|---------------------------|---------------------------------------------------|
+| RET        | isearch-exit              | Non-interactive search                            |
+| C-h b      | -                         | Get help on keybindings                           |
+| M-e        | isearch-edit-string       | -                                                 |
+| M-n        | isearch-ring-advance      | Next history item                                 |
+| M-p        | isearch-ring-retreat      | Previous history item                             |
+| M-r        | isearch-toggle-regexp     | Go to regex search mode (toggle modes)            |
+| M-c        | isearch-toggle-case-fold  | Switch case insensitivity                         |
+| RET        | isearch-exit              | -                                                 |
+| C-g        | isearch-abort             | -                                                 |
+| C-w        | isearch-yank-word-or-char | Yanks word from the buffer where the cursor is at |
+| M-s C-e    | isearch-yank-line         | Yanks the whole line where the cursor is at       |
+
+- When "failing isearch" appears:
+  - The prompt is editable by default only with a good match. Press delete until the prompt is editable again.
+  - Press `M-e` to edit the prompt with the bad match.
+
+Once in query-replace many isearch commands apply, plus:
+
+| Keybinding | Command | Description                       |
+|------------|---------|-----------------------------------|
+| !          | -       | Replace everything without asking |
 
 Searching in all open buffers:
 
