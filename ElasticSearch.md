@@ -37,6 +37,12 @@ curl -H 'Content-Type: application/json' -X POST -d '{"query": {"match_all": {}}
 curl -X PUT http://localhost:9200/schools?pretty=true
 ```
 
+## Deleting an index
+
+```sh
+curl -X DELETE http://localhost:9200/sales_development
+```
+
 ## Listing available indices
 
 ```sh

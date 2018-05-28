@@ -945,6 +945,12 @@ You can have a one-off implementation of a protocol (useful for testing):
 (next-age one-off-impl)
 ```
 
+You can also use `extend-type` instead of `extend-protocol`:
+
+```clj
+(extend-type java.io.File ToUrl (to-url [f] (.toString f)))
+```
+
 Misc:
 
 - Protocols and multimethods are much the same, but multimethods are more generic.

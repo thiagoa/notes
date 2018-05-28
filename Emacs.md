@@ -26,15 +26,17 @@ Some of these commands are specific to my configuration.
 
 ## File management
 
-| Keybinding | Description |                                        |
-|------------|-------------|----------------------------------------|
-| C-x C-j    | dired-jump  | Jump to current buffer's file in dired |
+| Keybinding | Description    |                                        |
+|------------|----------------|----------------------------------------|
+| C-x C-d    | dired-jump     | Jump to current buffer's file in dired |
+| C-x d      | dired          | Open dired                             |
+| C-x C-d    | list-directory | Briefly list directory contents        |
 
 Dired commands:
 
 | Keybinding | Command | Description     |
 |------------|---------|-----------------|
-| r          | -       | Rename the file |
+| R          | -       | Rename the file |
 
 ## Window
 
