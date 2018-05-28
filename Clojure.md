@@ -1,40 +1,5 @@
 # Clojure
 
-## Emacs
-
-- [Cider - Running tests](https://github.com/clojure-emacs/cider/blob/master/doc/running_tests.md)
-- [Animated paredit](http://danmidwood.com/content/2014/11/21/animated-paredit.html)
-- [Basic emacs + cider](https://www.braveclojure.com/basic-emacs/)
-- [Paredit cheatsheet](https://www.emacswiki.org/emacs/PareditCheatsheet)
-
-### Cider
-
-| Command     | Description                                |
-|-------------|--------------------------------------------|
-| C-c C-k     | Compile current file                       |
-| C-c C-z     | Alternate between repl and buffer          |
-| C-c M-j     | Cider jack in                              |
-| C-c M-n     | Switch to current namespace                |
-| C-l         | Center screen                              |
-| q           | Quit cider-error                           |
-| C-c C-t n   | Run all NS tests                           |
-| C-c C-t t   | Run one test                               |
-| C-c C-t r   | Re-run failed tests                        |
-| C-x C-e     | Eval last sexp                             |
-| M-.         | Jump to definition (redef all the things!) |
-| C-c C-d C-d | Jump to docs                               |
-
-### Paredit
-
-| Command | Description                                                   |
-|---------|---------------------------------------------------------------|
-| C-( (   | Wraps in parenthesis. (to-regex _str k) -> (to-regex (str k)) |
-| M-s     | Splice current pnarenthesis                                   |
-| C-S-0   | Slurps (expands) to the next outer Sexp                       |
-| C-S-9   | Slurps to the prev outer Sexp                                 |
-| C-S-]   | Barfs (contracts) to the next Sexp - Opposite of slurping     |
-| C-S-[   | Barfs to the prev Sexp - Opposite of slurping                 |
-
 ## Web Development
 
 ### Ring
