@@ -105,16 +105,6 @@ Searching in all open buffers:
 | C-h l      | find-library      | Goto a library source code (ex: window)        |
 | -          | eval-buffer       | Evaluates an elisp buffer                      |
 
-## Emacs Lisp
-
-| Keybinding | Command           |                                 |
-|------------|-------------------|---------------------------------|
-| M-:        | eval-expression   | Evaluate a line of lisp code    |
-| C-M-x      | eval-defun        | Evaluate current top-level sexp |
-| C-x C-e    | eval-last-sexp    | Evaluate previous sexp          |
-| -          | eval-region       | Evaluates an elisp region       |
-| C-h v      | describe-variable | Query elisp variable value      |
-
 ## Finding files
 
 | Keybinding | Command | Description       |
@@ -229,7 +219,7 @@ Once in ibuffer;
 | M-.         | cider-find-var                | Jump to definition (redef all the things!) |
 | C-c C-d C-d | cider-doc                     | Jump to docs                               |
 
-Some references:
+References:
 
 - [Cider - Running tests](https://github.com/clojure-emacs/cider/blob/master/doc/running_tests.md)
 - [Basic emacs + cider](https://www.braveclojure.com/basic-emacs/)
@@ -240,13 +230,13 @@ Some references:
 |------------|-----------------------------|----------------------------------------------------------------|
 | C-number ( | paredit-open-round          | Wraps in parenthesis. (to-regex \_str k) -> (to-regex (str k)) |
 | M-s        | paredit-splice-sexp         | Splice current parenthesis                                     |
-| C-)        | paredit-backward-slurp-sexp | Expands to the next outer Sexp                                 |
+| C-)        | paredit;-backward-slurp-sexp | Expands to the next outer Sexp                                 |
 | C-(        | paredit-forward-slurp-sexp  | Expands to the prev outer Sexp                                 |
 | C-}        | paredit-forward-barf-sexp   | Contracts to the next Sexp - Opposite of slurping              |
 | C-{        | paredit-backward-barf-sexp  | Contracts to the prev Sexp - Opposite of slurping              |
 | M-S        | paredit-split-sexp          | Split sexp. (foo\_ bar) -> (foo) (bar)                         |
 
-Some references:
+References:
 
 - [Animated paredit](http://danmidwood.com/content/2014/11/21/animated-paredit.html)
 - [Paredit cheatsheet](https://www.emacswiki.org/emacs/PareditCheatsheet)
@@ -305,8 +295,18 @@ How to wrap code with code, the manual way:
 
 Check out inf-ruby documentation, "Bugs" section.
 
-
 ## Elisp
+
+### Shortcuts
+
+| Keybinding | Command           |                                 |
+|------------|-------------------|---------------------------------|
+| M-:        | eval-expression   | Evaluate a line of lisp code    |
+| C-M-x      | eval-defun        | Evaluate current top-level sexp |
+| C-x C-e    | eval-last-sexp    | Evaluate previous sexp          |
+| -          | eval-region       | Evaluates an elisp region       |
+| C-h v      | describe-variable | Query elisp variable value      |
+| -          | ielm or repl      | An elisp repl                   |
 
 ### General examples
 
@@ -316,6 +316,46 @@ Check out inf-ruby documentation, "Bugs" section.
 
 ;; Mapping over a list
 (mapcar (lambda (x) (* x x)) '(1 2 3 4))
+
+;; Use let to set up scoped bindings:
+(let (x y)
+  (setq x 1)
+  (setq y 2)
+  (+ x y)) ;; 3
+
+;; You can also set the binding's value directly in the first form:
+(let ((x 1)
+	  (y 2))
+  (+ x y))
+
+;; You can't reuse a binding in another binding:
+(let ((x 1)
+	  (y (+ x 1)))
+  (+ x y)) ;; error: void-variable x
+
+;; Unless you use let*
+(let* ((x 1)
+	  (y (+ x 1)))
+  (+ x y)) ;; 3
+
+;; You can use dolist to loop over a list
+(dolist (v '("say" "these" "things"))
+  (message v)) ;; nil
+
+;; The third argument is "result", which has a default value of nil. The
+;; dolist expression will always return "result" (hence the nil return value).
+;;
+;; dolist looks functional, but it is not. The "result" argument is only
+;; useful if we use a mutable variable to update its value:
+(let (reversed-list)
+  (dolist (v '(1 2 3) reversed-list)
+	(cons v reversed-list))) ;; nil
+
+;; The example above will still return nil. We need to use setq to update
+;; the variable's value:
+(let (reversed-list)
+  (dolist (v '(1 2 3) reversed-list)
+	(setq reversed-list (cons v reversed-list)))) ;; '(3 2 1)
 ```
 
 ### Interactive functions:
