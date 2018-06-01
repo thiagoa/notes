@@ -2,6 +2,20 @@
 
 Some of these commands are specific to my configuration.
 
+## Escaping out
+
+| Keybinding  | Description                        |                                                        |
+|-------------|------------------------------------|--------------------------------------------------------|
+| Esc Esc Esc | keyboard-escape-quit               | Exit interactive cmd; clear prefix arg; force 1 window |
+| C-g         | keyboard-quit                      | Exit all things                                        |
+| C-c Q       | kill-other-buffer-and-close-window | Kill minibuffer by the side (not accumulating cruft)   |
+
+## Text editing
+
+| Keybinding | Description          |   |
+|------------|----------------------|---|
+| M-TAB      | ispell-complete-word | - |
+
 ## Movement
 
 | Keybinding      | Description                         |                                                |
@@ -59,6 +73,7 @@ Dired commands:
 | C-c h       | previous-buffer | Previous buffer                                  |
 | S-u         | revert-buffer   | Revert buffer to last save                       |
 | M-i         | ido-goto-symbol | Jump to symbol (varies between modes, langs, etc |
+| s-k         | kil-this-buffer | Kill buffer without prompting                    |
 
 ## Search and replace
 
@@ -111,7 +126,8 @@ Searching in all open buffers:
 | M-w        | kill-ring-save    | Save region in kill ring                           |
 | C-c C-h    | kill-whole-line   | -                                                  |
 | C-x h      | mark-whole-buffer | -                                                  |
-| C-u C-SPC  | pop-global-mark   | -                                                  |
+| C-u C-SPC  | -                 |                                                    |
+| C-x C-SPC  | pop-global-mark   | -                                                  |
 | C-F        | -                 | Activate region forward                            |
 | C-B        | -                 | Active region backward                             |
 | C-x C-p    | mark-page         | -                                                  |
@@ -170,22 +186,41 @@ Searching in all open buffers:
 
 In status window:
 
-| Keybinding             | Command | Description                           |
-|------------------------|---------|---------------------------------------|
-| M-n and M-p            | -       | Navigate between sections             |
-| Tab                    | -       | Toggle section details                |
-| g                      | -       | Refresh                               |
-| k                      | -       | Discard file                          |
-| cc                     | -       | Commit                                |
-| C-c C-c                | -       | Confirm commit                        |
-| C-c C-k                | -       | Cancel commit                         |
-| s                      | -       | Stage                                 |
-| ca                     | -       | Commit amend                          |
-| C-u C-x g or C-u C-x g | -       | Run magit status on another project   |
-| bl                     | -       | Checkout local branch                 |
-| bs                     | -       | Spinoff branch (create another branch |
-| p (-F) p               | -       | Push to corresponding remote          |
-| p (-F) u               | -       | Push to upstream                      |
+| Keybinding             | Command | Description                                                           |
+|------------------------|---------|-----------------------------------------------------------------------|
+| M-n and M-p            | -       | Navigate between sections                                             |
+| Tab                    | -       | Toggle section details                                                |
+| g                      | -       | Refresh                                                               |
+| k                      | -       | Discard file                                                          |
+| cc                     | -       | Commit                                                                |
+| C-c C-c                | -       | Confirm commit                                                        |
+| C-c C-k                | -       | Cancel commit                                                         |
+| s                      | -       | Stage                                                                 |
+| ca                     | -       | Commit amend (prompts for message)                                    |
+| ce                     | -       | Extend commit. Does not prompt for message                            |
+| C-u C-x g or C-u C-x g | -       | Run magit status on another project                                   |
+| bl                     | -       | Checkout local branch                                                 |
+| bs                     | -       | Spinoff branch (create another branch                                 |
+| p (-F) p               | -       | Push to corresponding remote                                          |
+| p (-F) u               | -       | Push to upstream                                                      |
+| fa                     | -       | Fetch all remotes                                                     |
+| re                     | -       | Rebase elsewhere                                                      |
+| rr                     |         | Continue rebase. `r` instead of `rr` gives a nice prompt with options |
+| M-tab                  | -       | Cycle visibility of diffs in current buffer                           |
+| C-tab                  | -       | Cycle visibility of current section and children                      |
+
+Example of resolving a rebase conflict:
+
+- `fa` - fetch all remotes
+- `re` - rebase elsewhere, type out the target (example,
+  `origin/develop`) or use the default one.
+- Enter a conflicted file and magit will turn on `smerge-mode`. Press
+  `C-c ^ o` (`smerge-keep-other`) to keep other; or `C-c ^ m`
+  (`smerge-keep-mine`) to keep mine; `C-c ^ n` to move to the next
+  conflicting area.
+- Return to magit status (what idiomatic key is it other than `C-x g`?)
+- `rr` to continue rebase.
+- `P-Fp` pushes to the default upstream.
 
 ## Rectangles
 
@@ -285,6 +320,12 @@ References:
 | C-x M-b    | ruby-send-block-and-go | -                                  |
 | C-x C-q    | -       | Insert mode in pry breakpoint (see README) |
 
+## Markdown
+
+| Keybinding | Description          |   |
+|------------|----------------------|---|
+| C-TAB      | markdown-table-align | - |
+
 ## Package management
 
 This can improve a lot:
@@ -328,6 +369,12 @@ How to wrap code with code, the manual way:
 
 Check out inf-ruby documentation, "Bugs" section.
 
+### My Emacs instance does not reponse
+
+```sh
+pkill -SIGUSR2 emacs
+```
+
 ## Elisp
 
 ### Shortcuts
@@ -340,6 +387,12 @@ Check out inf-ruby documentation, "Bugs" section.
 | -          | eval-region       | Evaluates an elisp region       |
 | C-h v      | describe-variable | Query elisp variable value      |
 | -          | ielm or repl      | An elisp repl                   |
+
+### Debugging
+
+```elisp
+(setq debug-on-error t)
+```
 
 ### General examples
 
