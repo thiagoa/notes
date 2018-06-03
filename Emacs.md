@@ -50,18 +50,19 @@ Dired commands:
 
 ## Window
 
-| Keybinding   | Description                 |                               |
-|--------------|-----------------------------|-------------------------------|
-| C-x }        | enlarge-window-horizontally | -                             |
-| C-x {        | shrink-window-horizontally  | -                             |
-| C-x ^        | enlarge-window              | -                             |
-| C-x 0        | delete-window               | -                             |
-| C-M-v        | scroll-other-window         | -                             |
-| M-- C-M-v    | -                           | Scroll other window backwards |
-| C-x o, C-RET | other-window                | Cycle windows                 |
-| C-l          | recenter-top-bottom         | Cycle screen center position  |
-| S-n          | scroll-viewport-up          | -                             |
-| S-p          | scroll-viewport-down        | -                             |
+| Keybinding   | Description                 |                                            |
+|--------------|-----------------------------|--------------------------------------------|
+| C-x }        | enlarge-window-horizontally | -                                          |
+| C-x {        | shrink-window-horizontally  | -                                          |
+| C-x ^        | enlarge-window              | -                                          |
+| C-x 0        | delete-window               | -                                          |
+| C-M-v        | scroll-other-window         | -                                          |
+| M-- C-M-v    | -                           | Scroll other window backwards              |
+| C-x o, C-RET | other-window                | Cycle windows                              |
+| C-l          | recenter-top-bottom         | Cycle screen center position               |
+| C-l          | reposition-window           | Make current definition or comment visible |
+| S-n          | scroll-viewport-up          | -                                          |
+| S-p          | scroll-viewport-down        | -                                          |
 
 ## Buffer & navigation
 
@@ -134,6 +135,7 @@ Searching in all open buffers:
 | C-x h      | mark-whole-buffer | -                                                  |
 | C-M \      | -                 | Indent region (useful for wrapping a block of code |
 | M-h        | mark-paragraph    | -                                                  |
+| C-M-h      | mark-defun        | -                                                  |
 
 ## Terminal
 
