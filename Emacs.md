@@ -289,6 +289,10 @@ Once in ibuffer;
 | M-.         | cider-find-var                | Jump to definition (redef all the things!) |
 | C-c C-d C-d | cider-doc                     | Jump to docs                               |
 
+Clojure editing tips:
+
+- Suppose you typed the following at the REPL: `(cons [1 2] 3)`. Then you realized the arguments are in the wrong order. Place the cursor at 3, and press `C-M-t` to swap the arguments.
+
 References:
 
 - [Cider - Running tests](https://github.com/clojure-emacs/cider/blob/master/doc/running_tests.md)
