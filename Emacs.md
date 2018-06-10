@@ -224,6 +224,8 @@ Example of resolving a rebase conflict:
 - `rr` to continue rebase.
 - `P-Fp` pushes to the default upstream.
 
+When browsing the log you can open a specific revision of a file with `magit-find-file`. Not sure how to do that from the diff screen.
+
 ## Rectangles
 
 Question: How to activate rectangle keymappings?
@@ -291,7 +293,7 @@ Once in ibuffer;
 
 Clojure editing tips:
 
-- Suppose you typed the following at the REPL: `(cons [1 2] 3)`. Then you realized the arguments are in the wrong order. Place the cursor at 3, and press `C-M-t` to swap the arguments.
+- Suppose you typed the following at the REPL: `(cons [1 2] 3)`. Then you realize the arguments are in the wrong order. Place the cursor at `3`, then press `C-M-t` to swap the arguments.
 
 References:
 
@@ -332,6 +334,17 @@ References:
 |------------|----------------------|---|
 | C-TAB      | markdown-table-align | - |
 
+## Compilation
+
+| Keybinding | Description    |                                  |
+|------------|----------------|----------------------------------|
+| M-g M-n    | next-error     | Go to next compilation error     |
+| M-g M-p    | previous-error | Go to previous compilation error |
+
+## Process management
+
+`M-x list-processes`
+
 ## Package management
 
 This can improve a lot:
@@ -340,7 +353,6 @@ This can improve a lot:
 |------------|---------------------|--------------------------------------------|
 | -          | package-auto-remove | Remember to delete package from Cask first |
 
-
 ## Text editing tricks
 
 How to wrap code with code, the manual way:
@@ -348,6 +360,17 @@ How to wrap code with code, the manual way:
 - Type out the top line, `C-SPC C-SPC` to set mark.
 - Move to the end of the code block (maybe `C-M-n`, `C-n`, etc)
 - Type out the bottom line, `C-M-\` to indent region.
+
+How to replace spaces with blank lines:
+
+```elisp
+["foo" "bar" "bat]
+```
+
+- Select the vector
+- `M-%`
+- Enter a blank space
+- `C-q C-j` to enter a newline
 
 ## Point and mark
 
@@ -371,6 +394,12 @@ How to wrap code with code, the manual way:
 - I've tried to run specs with `C-c , a`, but bundler was dying because it could not find a local gem.
 - The solution was to set an environment variable pointing to the local gem: `$BUNDLE_LOCAL__MY_GEM`.
 
+### I want to rerun the last RSpec compilation
+
+- I you are in a project file, `C-c , r`
+- If you are in the compilation window, just `g`
+- If you are in neither, `M-x recompile`
+
 ### Ruby console is outputting strange characters
 
 Check out inf-ruby documentation, "Bugs" section.
@@ -380,6 +409,29 @@ Check out inf-ruby documentation, "Bugs" section.
 ```sh
 pkill -SIGUSR2 emacs
 ```
+
+### I accidentally messed up my shell and can't find the CLI
+
+- Go to the end of the buffer
+- `comint-set-process-mark`
+- `comint-clear-buffer` `C-c M-o`
+- `comint-kill-input` `C-c C-u`
+- `comint-send-eof`
+- `comint-show-output` `C-c C-r` - Show output of last command
+- `comint-write-output` `C-c C-s` - Write output of last command
+- `comint-next-prompt` `C-c C-n`, `comint-previous-prompt` `C-c C-p` Go to EOL, press enter to rerun command
+- `comint-kill-subjob` - Kill a hanged process
+- `C-c .`, `M-1 C-c .`, etc
+
+### I want to customize shell colors
+
+- `customize`
+- `ansi-color-names-vector`
+- Choose the colors
+
+### There is a file at my cursor and I want to access it
+
+`M-x find-file-at-point`
 
 ## Elisp
 
@@ -400,6 +452,80 @@ pkill -SIGUSR2 emacs
 (setq debug-on-error t)
 ```
 
+### Cons cells
+
+Represents an ordered pair: lists are built upon cons cells.
+
+```elisp
+(setq ccell '(head . tail))
+(car ccell) ;; head
+(cdr ccell) ;; tail
+```
+
+### Symbols
+
+A symbol has the following components (see symbol components in the manual):
+
+- A name
+- A value
+- A function
+- A property list
+
+```elisp
+(put 'h 'key 'value)
+(symbol-plist 'h) ;; (key value)
+(get 'h 'key) ;; value
+(get 'h 'k) ;; nil
+
+;; this is the same as using put
+(setf (get 'h 'key) 'new-value)
+(symbol-plist 'h) ;; (key new-value)
+```
+
+### Variables
+
+```elisp
+(defvar x 1 "a number") ;; x is 1
+(defvar x 2) ;; x is still 1
+(defvar y) ;; declares y
+
+(setq z 1) ;; z is 1
+(setq z 2) ;; z is 2
+```
+
+Dynamic binding:
+
+```elisp
+(setq x 1)
+(defun get-x () x)
+
+(let ((x 2)) (get-x)) ;; Returns 2
+```
+
+With `lexical-binding` the result is different:
+
+```elisp
+;; Must be declared at the first line
+(setq lexical-binding t)
+
+(setq x 1)
+(defun get-x () x)
+
+(let ((x 2)) (get-x)) ;; Returns 1
+```
+
+However, even with `lexical-binding`, things change if the variable is declared with `defvar`:
+
+```elisp
+;; Must be declared at the first line
+(setq lexical-binding t)
+
+(defvar x 1)
+(defun get-x () x)
+
+(let ((x 2)) (get-x)) ;; Returns 2
+```
+
 ### General examples
 
 ```elisp
@@ -417,17 +543,17 @@ pkill -SIGUSR2 emacs
 
 ;; You can also set the binding's value directly in the first form:
 (let ((x 1)
-	  (y 2))
+      (y 2))
   (+ x y))
 
 ;; You can't reuse a binding in another binding:
 (let ((x 1)
-	  (y (+ x 1)))
+      (y (+ x 1)))
   (+ x y)) ;; error: void-variable x
 
 ;; Unless you use let*
 (let* ((x 1)
-	  (y (+ x 1)))
+      (y (+ x 1)))
   (+ x y)) ;; 3
 
 ;; You can use dolist to loop over a list
@@ -441,13 +567,13 @@ pkill -SIGUSR2 emacs
 ;; useful if we use a mutable variable to update its value:
 (let (reversed-list)
   (dolist (v '(1 2 3) reversed-list)
-	(cons v reversed-list))) ;; nil
+    (cons v reversed-list))) ;; nil
 
 ;; The example above will still return nil. We need to use setq to update
 ;; the variable's value:
 (let (reversed-list)
   (dolist (v '(1 2 3) reversed-list)
-	(setq reversed-list (cons v reversed-list)))) ;; '(3 2 1)
+    (setq reversed-list (cons v reversed-list)))) ;; '(3 2 1)
 ```
 
 ### Interactive functions:
@@ -481,5 +607,5 @@ Compilation:
 
 ```elisp
 (let ((default-directory "/Users/thiagoaraujo/Code/stack/stack-development/stack-api"))
-	  (compile "bundle exec rspec" 'rspec-compilation-mode))
+      (compile "bundle exec rspec" 'rspec-compilation-mode))
 ```
