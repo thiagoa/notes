@@ -312,6 +312,8 @@ References:
 | C-{        | paredit-backward-barf-sexp  | Contracts to the prev Sexp - Opposite of slurping              |
 | M-S        | paredit-split-sexp          | Split sexp. (foo\_ bar) -> (foo) (bar)                         |
 
+To bypass paredit to insert single parenthesis: `C-q (`. Use `C-q`!
+
 References:
 
 - [Animated paredit](http://danmidwood.com/content/2014/11/21/animated-paredit.html)
@@ -449,8 +451,35 @@ pkill -SIGUSR2 emacs
 ### Debugging
 
 ```elisp
+;; Enables debugging
 (setq debug-on-error t)
 ```
+
+- Or even better, `M-x toggle-debug-on-error`.
+- The debugger will automatically open on errors.
+- Press `e` to evaluate a lisp expression.
+- Press `c` to continue.
+- Press `C-h m` for help.
+- Use `(debug)` to set an explicit breakpoint without having to mess
+  with `(error "foo")`.
+
+Press `C-u C-M-x` instead of just `C-M-x` to evaluate and instrument a function, so that you can use a debugger.
+
+- Press `space` to step further.
+- Press `?` for help.
+- Press `q` to quit.
+
+### To try out
+
+- Actually read the Emacs Lisp intro. `C-h i` `m Emacs Lisp Intro`.
+- ert tests.
+- Use `check-parens` on save.
+- `elint-current-buffer`.
+- `redshank-mode` for refactoring.
+- `elp-instrument-function`, call the function, run `elp-results`
+- What more can `checkdoc` do?
+- `elp-instrument-package` on every single function that begins with a letter. Call `elp-results` the same way.
+- eless.scripter.co
 
 ### Cons cells
 
@@ -460,6 +489,7 @@ Represents an ordered pair: lists are built upon cons cells.
 (setq ccell '(head . tail))
 (car ccell) ;; head
 (cdr ccell) ;; tail
+(cons 'head 'tail) ;; (head . tail)
 ```
 
 ### Symbols
@@ -480,6 +510,22 @@ A symbol has the following components (see symbol components in the manual):
 ;; this is the same as using put
 (setf (get 'h 'key) 'new-value)
 (symbol-plist 'h) ;; (key new-value)
+```
+
+### Functions
+
+Inline functions:
+
+- Are faster than normal functions
+- Increase the size of compiled code
+- Do not behave well with debugging, tracing, and advising
+- Function definition is expanded into the caller
+- `defmacro` would expand into the same code, but can't be called with `apply`, `mapcar`, etc, while `defsubst` can.
+
+```elisp
+;; Both return the same results, but watch for the above details!
+(defun a-number () 1)
+(defsubst a-number () 1)
 ```
 
 ### Variables
@@ -574,6 +620,33 @@ However, even with `lexical-binding`, things change if the variable is declared 
 (let (reversed-list)
   (dolist (v '(1 2 3) reversed-list)
     (setq reversed-list (cons v reversed-list)))) ;; '(3 2 1)
+
+;; The message function accepts args. See the docs.
+(message "%s" 1)
+
+;; Concatenate lists by mutating them
+(nconc '(1 2) '(3 4 5)) ;; (1 2 3 4 5)
+
+;; Functional reverse
+(reverse '(1 2 3 4 5))
+
+;; Reverse in-place
+(setq l '(2 2 3 4))
+(nreverse l) ;; (4 3 2 2)
+l ;; (2) wtf? where's the rest?
+```
+
+### Common Lisp Extensions
+
+```elisp
+;; Almost a comprehension
+(cl-loop for i from 1 to 10 collect i) ;; (1 2 3 4 5 6 7 8 9 10)
+
+;; Escaping out of a loop. Stops iteration at "2".
+;; Justing requiring 'cl will "monkey patch" dolist to work this way.
+(require 'cl)
+(dolist (i '(1 2 3))
+  (when (= 2 i) (return i)))
 ```
 
 ### Interactive functions:
