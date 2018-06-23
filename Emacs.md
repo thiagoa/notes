@@ -15,6 +15,7 @@ Some of these commands are specific to my configuration.
 | Keybinding | Description          |   |
 |------------|----------------------|---|
 | M-TAB      | ispell-complete-word | - |
+| M-(        | insert-parentheses   | - |
 
 ## Movement
 
@@ -526,6 +527,24 @@ Inline functions:
 ;; Both return the same results, but watch for the above details!
 (defun a-number () 1)
 (defsubst a-number () 1)
+```
+
+Receiving rest arguments as a list:
+
+```elisp
+(defun delegator (orig-fun &rest rest)
+  (apply orig-fun rest))
+
+(delegator (lambda (x y) (+ x y)) 1 2) ;; 3
+```
+
+And the same with optional arguments:
+
+```elisp
+(defun delegator (orig-fun &optional x y)
+  (apply orig-fun `(,x ,y)))
+
+(delegator (lambda (x y) (+ x y)) 1 2)
 ```
 
 ### Variables
