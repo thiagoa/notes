@@ -1,5 +1,55 @@
 # Bash
 
+https://dev.to/rpalo/bash-brackets-quick-reference-4eh6
+
+## Conditionals
+
+Did a command exit successfully?
+
+```bash
+[[ $( grep -q PATTERN FILE )$? ]]
+```
+
+## Subshells
+
+Run a command in a subshell with parenthesis:
+
+```bash
+$ (foo=bar; echo $foo)
+bar
+```
+
+Insert the result of the command by adding a $:
+
+```bash
+$ echo $(foo=bar; echo $foo)
+bar
+```
+
+Without a $, there would be an error:
+
+```bash
+$ echo (foo=bar; echo $foo)
+bash: syntax error near unexpected token `foo=bar'
+```
+
+## Arithmetics
+
+Use double parenthesis:
+
+```bash
+$ i=5
+$ ((i += 2))
+$ echo $i
+7
+```
+
+- If the arithmetics result is 0, `$?` will be 1.
+- You can't use this construct within an expression
+- To glean the results, you have to use variables as we did above.
+
+Or you can use arithmetic interpolation with `$((op))`.
+
 ## Globs
 
 ```bash
@@ -88,9 +138,17 @@ Associative arrays are only available in Bash v4:
 $ declare -A MYAA=([one]=1 [two]=2 [three]=3)
 ```
 
+Creating an array from a command's output:
+
+```bash
+VAR=($(command))
+```
+
 ## Process substitution
 
 ### The <() operator
+
+Return the results of the command through a file descriptor.
 
 ```bash
 $ diff <(ls dira) <(ls dirb)
@@ -154,6 +212,12 @@ cat <(ls a) > >(grep 2 > f)
 - `<(ls a)` substitutes the output of `ls a` by a temp file.
 - The output is piped into an stdin substitution.
 - This will create an "f" file with contents == "2".
+
+What does the following sort command do?
+
+```bash
+sort -nr -k 5 <( ls -l /bin ) <( ls -l /usr/bin ) <( ls -l /sbin )
+```
 
 ## Builtin commands
 
