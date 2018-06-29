@@ -375,6 +375,16 @@ How to replace spaces with blank lines:
 - Enter a blank space
 - `C-q C-j` to enter a newline
 
+## Search and replace
+
+- Jump to dired
+- Run `find-grep-dired` and type out the search pattern.
+- Mark the files you want to run the replacement: `t`, `m`, `u` to unmark, etc.
+- Press `Q` and type out the search/replacement pattern.
+- Press `Y` to replace in all files, `!` to replace all occurrences of the current file, etc.
+- `C-x s` runs `save-some-buffers`. Press `!` to confirm saving all files.
+- Alternatively, open `ibuffer`, mark unsaved files with `*u`, `S` to save all files and `D` to close all of them.
+
 ## Point and mark
 
 - Mark is is a buffer location that you set.
