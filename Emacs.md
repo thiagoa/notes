@@ -385,6 +385,8 @@ How to replace spaces with blank lines:
 - `C-x s` runs `save-some-buffers`. Press `!` to confirm saving all files.
 - Alternatively, open `ibuffer`, mark unsaved files with `*u`, `S` to save all files and `D` to close all of them.
 
+The easiest alternative is to run `C-c p r`, `projectile-replace`.
+
 ## Point and mark
 
 - Mark is is a buffer location that you set.
