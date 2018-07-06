@@ -402,7 +402,44 @@ The easiest alternative is to run `C-c p r`, `projectile-replace`.
   - Temporarily enable mark with `C-SPC C-SPC`.
   - Some commands operate from point to the end of the buffer, and not on the region - example, `M-%`.
 
+## Aligning
+
+There are "native" functions to perform aligning in `align.el`. The following Ruby shortcuts (or some of them at least) can be useful:
+
+https://gist.github.com/WaYdotNET/700416
+
+
 ## Problems
+
+### projectile-rails-dbconsole does not run
+
+I found this bug but haven't tried to *definitely* fix it. The elisp
+error seems to be "wrong number of arguments". Here's a dirty
+fix though. Search for the following code within the
+`sql-product-interactive` function, then comment out the following
+line:
+
+```elisp
+(funcall (sql-get-product-feature product :sqli-comint-func)
+         product
+         ;; (sql-get-product-feature product :sqli-options)
+         (cond
+          ((null new-name)
+           "*SQL*")
+          ((stringp new-name)
+           (if (string-prefix-p "*SQL: " new-name t)
+               new-name
+             (concat "*SQL: " new-name "*")))
+          ((equal new-name '(4))
+           (concat
+            "*SQL: "
+            (read-string
+             "Buffer name (\"*SQL: XXX*\"; enter `XXX'): "
+             sql-alternate-buffer-name)
+            "*"))
+          (t
+           (format "*SQL: %s*" new-name)))))
+```
 
 ### RSpec is dying with a strange error
 
