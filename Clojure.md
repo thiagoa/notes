@@ -173,9 +173,9 @@ You can have different contexts within a single test:
 
 (deftest test-suite-name
   (testing "Set 1"
-	(is (= 1 1)))
+    (is (= 1 1)))
   (testing "Set 2"
-	(is (= 2 1))))
+    (is (= 2 1))))
 ```
 
 `deftest` generates a function under the curtains:
@@ -199,9 +199,9 @@ You can run parameterized tests with `are`:
 
 (deftest test-add
   (are [x y] (= x y)
-	(+) 0
-	(+ 1) 1
-	(+ 1 2) 3))
+    (+) 0
+    (+ 1) 1
+    (+ 1 2) 3))
 ```
 
 ### Property-Based testing
@@ -262,8 +262,8 @@ Pick a random book from each vector:
 ;; gen/elements picks a random item
 (def inventory-each-with-a-random-book-gen
   (gen/let [inventory inventory-gen
-			book (gen/elements inventory)]
-	{ :inventory inventory, :book book }))
+            book (gen/elements inventory)]
+    { :inventory inventory, :book book }))
 
 (gen/sample inventory-each-with-a-random-book)
 ```
@@ -273,9 +273,9 @@ With that, you can test a function that finds a book by title:
 ```clj
 (ns inventory.other-test
   (:require [clojure.test :refer :all]
-			[clojure.test.check.properties :as prop]
-			[clojure.test.check.clojure-test :as ctest]
-			[clojure.test.check.generators :as gen]))
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :as ctest]
+            [clojure.test.check.generators :as gen]))
 
 (def numbers-greater-than-zero-gen
   (gen/such-that (complement zero?) gen/pos-int))
@@ -294,8 +294,8 @@ With that, you can test a function that finds a book by title:
 
 (def inventory-each-with-a-random-book-gen
   (gen/let [inventory inventory-gen
-			book (gen/elements inventory)]
-	{ :inventory inventory, :book book }))
+            book (gen/elements inventory)]
+    { :inventory inventory, :book book }))
 
 (defn find-by-title
   "Given a books hash-map vector, finds a book by title"
@@ -311,8 +311,8 @@ With that, you can test a function that finds a book by title:
 ;; Generates 50 samples to test against
 (ctest/defspec find-by-title-finds-books 50
   (prop/for-all [sample inventory-each-with-a-random-book-gen]
-				(= (find-by-title-in-sample-data sample)
-				   (:book sample))))
+                (= (find-by-title-in-sample-data sample)
+                   (:book sample))))
 ```
 
 Or you can do a quick sanity check:
@@ -325,8 +325,8 @@ Or you can do a quick sanity check:
 (tc/quick-check
  50
  (prop/for-all [sample inventory-each-with-a-random-book-gen]
-			   (= (find-by-title-in-sample-data sample)
-				  (:book sample))))
+               (= (find-by-title-in-sample-data sample)
+                  (:book sample))))
 ```
 
 ## Clojure spec
@@ -334,24 +334,24 @@ Or you can do a quick sanity check:
 ```clj
 (ns playground.core
   (:require [clojure.spec.alpha :as s]
-			[orchestra.spec.test :as st]))
+            [orchestra.spec.test :as st]))
 
 (defn slice
   [m ks]
   (reduce (fn [acc k]
-			(if-let [v (get m k)]
-			  (assoc acc k v)
-			  acc))
-		  {}
-		  ks))
+            (if-let [v (get m k)]
+              (assoc acc k v)
+              acc))
+          {}
+          ks))
 
 (s/fdef slice
-		:args (s/cat :m map?
-					 :ks (s/coll-of any?))
-		:fn (fn [ctx]
-			  (= (into #{} (-> ctx :args :ks))
-				 (into #{} (-> ctx :ret keys))))
-		:ret map?)
+        :args (s/cat :m map?
+                     :ks (s/coll-of any?))
+        :fn (fn [ctx]
+              (= (into #{} (-> ctx :args :ks))
+                 (into #{} (-> ctx :ret keys))))
+        :ret map?)
 
 (st/instrument `slice)
 
@@ -375,24 +375,24 @@ A better spec for the `slice` function would be:
 ```clj
 (defn slice [m ks]
   (reduce (fn [acc k]
-			(if-some [v (get m k)]
-			  (assoc acc k v)
-			  acc))
-		  {}
-		  ks))
+            (if-some [v (get m k)]
+              (assoc acc k v)
+              acc))
+          {}
+          ks))
 
 (defn slice-ret-keys-validator [ctx]
   (let [intersect
-		(se/intersection
-		 (-> ctx :args :ks set)
-		 (-> ctx :args :m keys set))]
-	(= intersect (-> ctx :ret keys set))))
+        (se/intersection
+         (-> ctx :args :ks set)
+         (-> ctx :args :m keys set))]
+    (= intersect (-> ctx :ret keys set))))
 
 (s/fdef slice
-		:args (s/cat :m map?
-					 :ks (s/coll-of any?))
-		:fn slice-ret-keys-validator
-		:ret map?)
+        :args (s/cat :m map?
+                     :ks (s/coll-of any?))
+        :fn slice-ret-keys-validator
+        :ret map?)
 ```
 
 It accounts for the case when the map does not have the input keys.
@@ -501,10 +501,10 @@ Recur rebinds values declared at the beginning of a loop:
 (defn new-sequence-with-length-of-passed-list
   [lst]
   (loop [i 0, res []]
-	(if
-	  (>= i (count lst))
-	  res
-	  (recur (+ i 1) (conj res i)))))
+    (if
+      (>= i (count lst))
+      res
+      (recur (+ i 1) (conj res i)))))
 ```
 
 
@@ -575,29 +575,29 @@ All these functions accept any data structure and return sequences:
   ([books] (sum-copies books 0))
   ([books total]
    (if (empty? books)
-	 total
-	 (sum-copies
-	  (rest books)
-	  (+ total (:copies-sold (first books)))))))
+     total
+     (sum-copies
+      (rest books)
+      (+ total (:copies-sold (first books)))))))
 
 ; Does not eat up stack space due to recur. recur needs to be called last
 (defn sum-copies-good
   ([books] (sum-copies books 0))
   ([books total]
    (if (empty? books)
-	 total
-	 (recur
-	  (rest books)
-	  (+ total (:copies-sold (first books)))))))
+     total
+     (recur
+      (rest books)
+      (+ total (:copies-sold (first books)))))))
 
 ; Avoids multiple arity and uses loop
 (defn sum-copies-better [books]
   (loop [books books, total 0]
    (if (empty? books)
-	 total
-	 (recur
-	  (rest books)
-	  (+ total (:copies-sold (first books)))))))
+     total
+     (recur
+      (rest books)
+      (+ total (:copies-sold (first books)))))))
 
 ; Does not use loop or recursion at all. Recursion is low-level
 (defn sum-copies-best
@@ -654,12 +654,12 @@ A few useful variations:
 ;; if-let is able to run one list, and can have an "else" list
 (defn uppercase-author [book]
   (if-let [author (:author book)]
-	(.toUpperCase author)))
+    (.toUpperCase author)))
 
 ;; when-let - is able to run more than one list, and no "else" list
 (defn uppercase-author [book]
   (when-let [author (:author book)]
-	(.toUpperCase author)))
+    (.toUpperCase author)))
 
 ```
 
@@ -690,12 +690,12 @@ Implement `map` over `reduce`:
 (defn- my-map-reducer [f]
   (fn [coll x]
    (->> x
-		(apply f)
-		(conj coll))))
+        (apply f)
+        (conj coll))))
 
 (defn my-map [f & colls]
   (let [zipped-colls (apply map vector colls)
-		reducer (my-map-reducer f)]
+        reducer (my-map-reducer f)]
    (reduce reducer [] zipped-colls)))
 ```
 
@@ -726,10 +726,10 @@ Implement `map` over `reduce`:
 ;; the first argument to each one.
 (defn describe-number [n]
   (cond-> []
-	(odd? n) (conj "odd")
-	(even? n) (conj "even")
-	(zero? n) (conj "zero")
-	(pos? n) (conj "positive")))
+    (odd? n) (conj "odd")
+    (even? n) (conj "even")
+    (zero? n) (conj "zero")
+    (pos? n) (conj "positive")))
 ```
 
 ## Destructuring
@@ -876,25 +876,25 @@ We can define a record-specific implementation for it:
 (defrecord Animal [name type age wild? sound]
   Being
   (identification [this]
-	;; Woops! We can call `name` instead of `(:name this)`
-	(str name " is a " type))
+    ;; Woops! We can call `name` instead of `(:name this)`
+    (str name " is a " type))
   (description [this]
-	(if (:wild? this)
-	  "Is a wild animal"
-	  "Is not a wild animal"))
+    (if (:wild? this)
+      "Is a wild animal"
+      "Is not a wild animal"))
   (greeting [this message]
-	(str type " says " message)))
+    (str type " says " message)))
 
 (defrecord Person [name age good-boy?]
   Being
   (identification [this]
-	(str name " has " (:age this) " years"))
+    (str name " has " (:age this) " years"))
   (description [this]
-	(if (:good-boy? this)
-	  "Is a good boy"
-	  "Is not a good boy"))
+    (if (:good-boy? this)
+      "Is a good boy"
+      "Is not a good boy"))
   (greeting [this message]
-	(str name " says " message)))
+    (str name " says " message)))
 ```
 
 > P.S.: We can define more than one protocol per record definition at once (syntax omitted for brevity).
@@ -1194,9 +1194,9 @@ We can use the generic `conj` function (which works on other data structures) wi
 (defn my-iterate [f x] (cons x (lazy-seq (my-iterate f (f x)))))
 (defn my-map [f col]
   (when-not (empty? col)
-	(cons
-	  (f (first col))
-	  (lazy-seq (my-map f (rest col))))))
+    (cons
+      (f (first col))
+      (lazy-seq (my-map f (rest col))))))
 
 ;; Seq and doall force evaluation of the lazy sequence. Useful for side-effects.
 (seq (map slurp (map #(str "file" %) (range 1 10))))
@@ -1345,7 +1345,7 @@ Threads block until the value is available:
 ;; @ is a shortcut for deref
 (.start
   (Thread.
-	(fn [] (println @value-computed-only-once-then-cached))))
+    (fn [] (println @value-computed-only-once-then-cached))))
 ```
 
 ### Promises
@@ -1357,7 +1357,7 @@ Threads block until the value is available:
 
 (.start
   (Thread.
-	(fn [] (Thread/sleep 2000) (deliver some-value "Pizza is ready!"))))
+    (fn [] (Thread/sleep 2000) (deliver some-value "Pizza is ready!"))))
 
 (println (str "Good news: " @some-value))
 ```
@@ -1392,13 +1392,13 @@ You should never use `reset!` with atoms. Use `swap!`.
 
 (add-watch counter :printer
   (fn [key atom old-value new-value]
-	(when (zero? (mod new-value 100000))
-	 (println old-value new-value))))
+    (when (zero? (mod new-value 100000))
+     (println old-value new-value))))
 
 (dotimes [n 2]
   (.start
-	(Thread.
-	  (fn [] (dotimes [n 1000000] (swap! counter inc))))))
+    (Thread.
+      (fn [] (dotimes [n 1000000] (swap! counter inc))))))
 
 (Thread/sleep 2000)
 @counter ; 2000000
@@ -1466,8 +1466,8 @@ Each thread can have its own value of the same var:
 (def ^:dynamic *debug-on* false)
 (defn do-debug []
   (if *debug-on*
-	(println "True")
-	(println "False")))
+    (println "True")
+    (println "False")))
 
 (do-debug) ; Prints false
 
@@ -1583,12 +1583,12 @@ Not useful, but we could evaluate just the first sublist:
 ```clj
 (defmacro regex [re s & body]
   `(let [match# (re-find ~re ~s)]
-	 (when match#
-	   (let [[~'%0 ~'%1 ~'%2]
-			 (if (string? match#)
-			   [match#]
-			   match#)]
-		 ~@body))))
+     (when match#
+       (let [[~'%0 ~'%1 ~'%2]
+             (if (string? match#)
+               [match#]
+               match#)]
+         ~@body))))
 ```
 
 To use this macro:
@@ -1606,7 +1606,7 @@ Explanations:
 ```clj
 (defmacro foo []
   (let [x (gensym)]
-	`(let [~x 5] ~@(repeat 3 `(println ~x)))))
+    `(let [~x 5] ~@(repeat 3 `(println ~x)))))
 
 (foo)
 ; 5
@@ -1621,12 +1621,12 @@ Explanations:
 ```clj
 (defmacro regex [re s & body]
   `(let [~'match (re-find ~re ~s)]
-	 (when ~'match
-	   (let [[~'%0 ~'%1 ~'%2]
-			 (if (string? ~'match)
-			   [~'match]
-			   ~'match)]
-		 ~@body))))
+     (when ~'match
+       (let [[~'%0 ~'%1 ~'%2]
+             (if (string? ~'match)
+               [~'match]
+               ~'match)]
+         ~@body))))
 ```
 
 The problem with this approach is that our macro body will be able to access the value of the `match` symbol:
@@ -1647,12 +1647,12 @@ This is a simplified implementation of the `for` macro that's similar to `map`:
 ```clj
 (defmacro map-for [v & body]
   (let [bindings (vec (take-nth 2 v))
-		values (take-nth 2 (rest v))]
-	`(loop [iter# (apply map vector '~values) acc# '()]
-	  (if (seq iter#)
-		(let [~bindings (first iter#)]
-		  (recur (rest iter#) (cons ~@body acc#)))
-		(reverse acc#)))))
+        values (take-nth 2 (rest v))]
+    `(loop [iter# (apply map vector '~values) acc# '()]
+      (if (seq iter#)
+        (let [~bindings (first iter#)]
+          (recur (rest iter#) (cons ~@body acc#)))
+        (reverse acc#)))))
 
 (map-for [x [1 2] y [3 4]] (+ x y)) ; (4 6)
 ```
