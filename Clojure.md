@@ -1320,7 +1320,45 @@ When using groups, an array is returned. The first element is the full match, an
 
 ## Concurrency
 
-This section is a reminder of Clojure [concurrency primitives](https://purelyfunctional.tv/guide/clojure-concurrency/).
+Among others, this section is a reminder of Clojure [concurrency primitives](https://purelyfunctional.tv/guide/clojure-concurrency/).
+
+### Threads
+
+Example of instantiating and joining threads:
+
+```clj
+(map
+  #(do (.start %1) (.join %1))
+  [(Thread. #(do (Thread/sleep 5000) (println "After 5 seconds...")))
+   (Thread. #(do (Thread/sleep 4000) (println "After 4 seconds...")))])
+```
+
+Note: You can't `(.start (.join thread))` because the return values are `nil`.
+
+"Bare" threads are low-level and should be avoided. Favor abstractions
+such as futures and thread pools.
+
+```clj
+(import java.util.concurrent.Executors)
+
+(def fixed-pool (Executors/newFixedThreadPool 3))
+
+(.execute fixed-pool heavy-work-1)
+(.execute fixed-pool heavy-work-2)
+```
+
+Note: the JVM will refuse to stop if there are any threads still
+running. Ensure your threads are dead and cleaned up before your
+program terminates. Another option is to run the threads as daemons:
+
+```clj
+(def t (Thread. #(Thread/sleep 5000)))
+(.setDaemon t true)
+(.start t)
+```
+
+Be aware that daemon threads will be killed without warning when the
+program terminates.
 
 ### Delay
 
@@ -1366,14 +1404,37 @@ Threads block until the value is available:
 (println (str "Good news: " @some-value))
 ```
 
+A call to a deref'ed promise will block until there is a value.
+
 ### Futures
 
 > Please calculate this in another thread
+> Or... A promise that brings along its own thread
+
+Prefer futures to promises when possible.
 
 ```clj
 (def pizza (future (do (Thread/sleep 5000) "Pizza is ready!")))
 
 (println (str "Good news: " @pizza))
+```
+
+`pmap` will execute a parallel mapping based on futures. A foolish
+example:
+
+```clj
+(defn expensive-work [value] (println (str "Took me ages to compute " value)))
+(pmap expensive-work [1 2 3 4])
+```
+
+Of course, `pmap` is slower than `map` unless doing intense computing.
+
+Here's a basic implementation of `pmap`:
+
+```clj
+(defn my-pmap [func coll]
+  (let [futures (doall (map #(future (func %1)) coll))]
+    (map deref futures)))
 ```
 
 ### Deref
@@ -1384,6 +1445,8 @@ With timeout:
 (def value (promise))
 (deref value 2000 :timed-out)
 ```
+
+It's a best practice to always supply a timeout and a default value.
 
 ### Atoms
 
