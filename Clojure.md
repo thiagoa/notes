@@ -50,6 +50,10 @@ Compojure is useful for:
 - HTTP method switching.
 - Making Ring responses easier to generate.
 
+### Databases
+
+Use JDBC, a Java package. There's a clojure wrapper called `clojure.java.jdbc`.
+
 ## Workflow
 
 ### Installing packages
