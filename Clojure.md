@@ -1474,6 +1474,34 @@ You should never use `reset!` with atoms. Use `swap!`.
 (remove-watch counter :printer)
 ```
 
+- Never use side-effectful code within a `swap!` because atoms make
+  use of transactions!
+- `swap!` is synchronous. When it returns, it means the atom has been
+  updated (remember GenServer `call` VS `cast`).
+
+Let's reimplement `clojure.core/memoize` and see how we can use atoms
+from within closures:
+
+```clj
+(defn fact
+  ([x] (fact x 1))
+  ([x, acc]
+    (if (= x 1)
+      acc
+      (recur (dec x) (* acc x)))))
+
+(defn my-memoize [f]
+  (let [cache (atom {})]
+    (fn [& args]
+      (if-let [cached (find @cache args)]
+        (val cached)
+        (let [res (apply f args)]
+          (swap! cache assoc args res)
+          res)))))
+
+(def memoized-fact fact)
+```
+
 ### Refs
 
 > Keep multiple values in a consistent relationship
@@ -1494,6 +1522,80 @@ You should never use `reset!` with atoms. Use `swap!`.
 (println @c)
 (println @f)
 ```
+
+`ref-set` will always overwrite the value. With `alter`, you can
+change the value with a function:
+
+```clj
+(defn increase-temp-by [i]
+  (dosync
+    (let [v (alter c + i)]
+      (ref-set f (c->f v)))))
+```
+
+Or use an anonymous function:
+
+```clj
+(defn increase-temp-by [i]
+  (dosync
+    (let [v (alter c #(+ % i))]
+      (ref-set f (c->f v)))))
+```
+
+And you can use `commute` when the order of operations does not
+matter. For two operations that increment a counter, if we switch both
+the end result will be the same. We could rewrite the previous example
+as:
+
+```clj
+(defn increase-temp-by [i]
+  (dosync
+    (let [v (commute c + i)]
+      (ref-set f (c->f v)))))
+```
+
+Always avoid refs when you can, even if it implies in keeping a map
+within an atom. Atoms are simpler to manage.
+
+### Agents
+
+Agents are useful for when the update function is side-effectful. The
+update function will get called exactly once:
+
+```clj
+(def people (agent {}))
+
+(defn notify-add-person [name]
+  (println (str name " has been added")))
+
+(defn add-person [name age]
+  (let [person {:name name :age age}]
+    (send
+      people
+      (fn [people-map]
+        (assoc people-map name person)
+        (notify-add-person name)))))
+```
+
+- Agent is async; it might return before executing the operation. You
+  can also use it when the update function is slow.
+- It sends the function to a queue created especially for the agent.
+
+If a function call is falty, the agent will raise on the second call:
+
+```clj
+(send people + 1)
+(send people assoc name {:name "Foo" age 20}) ;; cannot be cast to java.lang.Number
+```
+
+We can check the agent state with `agent-error` and restart it:
+
+```clj
+(agent-error people) ;; returns nil if no errors, or the error otherwise
+(restart-agent people {} :clear-actions true)
+```
+
+And we can shutdown any agents with `(shutdown-agent)`
 
 ### Vars
 
