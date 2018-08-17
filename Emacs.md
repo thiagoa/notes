@@ -408,6 +408,12 @@ There are "native" functions to perform aligning in `align.el`. The following Ru
 
 https://gist.github.com/WaYdotNET/700416
 
+## Better searches
+
+- `C-c p r s` - Projectile rg
+- `M-n` - Pull up the search term at point
+- `C-c C-o` - Open search results in an occur buffer
+- `M-g M-n`, `M-g M-p` - Navigate results
 
 ## Problems
 

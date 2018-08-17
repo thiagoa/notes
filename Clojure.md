@@ -984,6 +984,9 @@ Misc:
 
 ;; Generates an exception of type RuntimeException
 (ex-info "An exception" {:type java.lang.RuntimeException})
+
+;; java style
+(throw (IllegalArgumentException. "needs an even number of forms"))
 ```
 
 ## Types
@@ -1832,6 +1835,16 @@ This is a simplified implementation of the `for` macro that's similar to `map`:
 - `(macroexpand-1 '(macro-func))`: expands top-level macro just one time
 - `(clojure.walk/macroexpand-all '(macro-func))`: full expand
 
+## Recursive macros
+
+```clj
+(defmacro my-and
+  ([] true)
+  ([x] x)
+  ([x & next]
+   `(let [and# ~x]
+      (if and# (my-and ~@next) and#))))
+```
 
 ## Java interop
 
