@@ -144,3 +144,92 @@ tests. For example:
 (ideally we do want to cover it), but if we make `getInterface` use
 `getDeclaration` internally, the surface area of our test will be
 increased.
+
+### Interception point and pinch point
+
+Where can I write a test that will detect many changes in one area?
+
+An interception point is a point in your program where you can detect
+the effects of a particular change. A change can have more than one
+interception point.
+
+- If you are making a private change to a module, the closest
+I.P. will be the next public interface. If you write a test at this
+level, however, you will be neglecting call-site coverage. Sometimes
+this will your best choice though:
+    - It might be hard to write a test for a distant I.P.
+    - The number of steps between the changed area and the I.P. might
+    make it harder to write assertions.
+    - _Sometimes_, putting the call-site under test will not be
+    a necessity.
+
+**WARNING**: Always change the code at the change point to make sure tests
+fail as expected.
+
+When a change is comprised of other smaller changes, the trick is to
+find an interception point that will cover all of them: the "pinch
+point" - a narrowing in an effect sketch.
+
+- Write characterization tests for the individual change points when
+you can.
+- Or find a high-level I.P. to focus on a wide chunk of code. The
+  benefit is that by doing so, you might not need to break any
+  dependencies.
+- Optionally use an effect sketch to find the I.P.
+
+What if there is more than one call-site? We can choose a single pinch
+point to perform our changes, especially if the code is not being used
+in distinct ways. Or two call-sites together can be seen as a single
+pinch point to cover all of our changes. The question is: "will I be
+able to sense the changes in this place?".
+
+If you can't find a pinch point, write tests for the individual
+changes or:
+
+- Revisit the change points. Are you trying to do too much at once?
+- Find pinch points for one or two changes at a time.
+
+A pinch point is a natural encapsulation boundary. Encapsulation is:
+we don't have to care about the internals, but when we do, we don't
+have to look at the externals to understand them. Given a pinch point,
+how can responsibilities be reallocated to give better encapsulation?
+
+We can use an effect sketch to find hidden classes or modules in the
+form of indirect dependencies. Are there any encapsulation boundaries
+in the effect sketch?
+
+The most important thing to keep in mind: pinch points are a way to
+start some invasive work in part of a program: for example, writing
+unit tests and more reasonable integration tests. Pinch point tests
+will eventually go away.
+
+Be careful for unit tests not to grow into mini-integration tests!
+
+## Characterization tests
+
+- Are documentation tests for the current system behavior.
+- They are not about finding bugs.
+- A bug can be a feature users rely on. So don't rush to change the
+  behavior.
+- They help us make changes: what the system does VS what it's
+  supposed to do.
+- Flag unexpected behavior and find out what the effect will be after
+fixed.
+- Given different inputs, characterization tests are a way of asking
+  "what is the actual behavior?".
+- When to stop: do the tests cover the changes we need to make?
+- What can go wrong? How can I exploit these gotchas in my tests?
+- Useful technique for monster methods: "sensing variables".
+- Look for invariants, global values, and refactor them. This might
+lead to new insights.
+- Be aware of gotchas: a false positive can happen when the
+characterization test is not thorough enough, and we might never
+notice. Example: given a function using doubles, we might use "extract
+method" on it and accidentally convert the double to an int.
+
+## Library dependencies
+
+- Avoid direct calls to libraries throughout your code.
+- For languages that support interfaces, prefer libraries that define
+interfaces which allow you to define fakes.
+- Libraries should be test friendly.
