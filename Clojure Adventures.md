@@ -1,3 +1,19 @@
+## 2018-09-02 - Confusing errors
+
+Given this function:
+
+```clj
+(defn foo [{:keys [bar]}] bar)
+```
+
+I can still call it with a `nil`. Clojure will deestructure `bar` as `nil`:
+
+```clj
+(foo nil) ;; nil
+```
+
+WTF, Clojure?! In these situations, the `nil` _can_ propagate down the call stack and generate a confusing error.
+
 ## 2018-09-02 - Error messages
 
 A Clojure programmer needs to be good at figuring out cryptic errors. This is currently being improved in the language, but the advice still applies. For example, I had my tests setup with the following hook:

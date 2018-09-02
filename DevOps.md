@@ -1,0 +1,11 @@
+- Three ways of DevOps
+    - Systems Thinking
+	- Feedback Loops
+	- Culture of Experimentation
+- Principle of Kaizen: continuous improvement
+- CAMS model: Culture, automation, measurement, sharing
+    - Sharing
+	  - For visibility: what you did
+	  - Get feedback early
+	  - Transparency: why you did it, avoid doing the wrong thing
+	  - Knowledge transfer: daily standup, retrospectives, documentation, brown bags, tech talks, internal conferences, chatops (watch someone do a deploy, look at the history)
