@@ -1,5 +1,26 @@
 # Emacs
 
+**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized and distributed.
+
+https://github.com/clojure-emacs/cider/blob/master/doc/interactive_programming.md
+
+https://stackoverflow.com/questions/163591/bash-autocompletion-in-emacs-shell-mode
+
+When using `z` to jump to a directory, Emacs shell loses autocomplete. Enable it back with `C-M-m` or the `dirs` command
+
+http://www.zenspider.com/ruby/2012/06/my-emacs-workflow.html
+
+```
+Particularly, I find VC’s C-x v = to quickly display diffs, C-x v g to run an annotated blame with heatmap, and C-x v v (vc-next-action) to do whatever is next to do (lock/unlock/commit/merge) as simply brilliant. Between those three commands, you can do 80% of what you need to do throughout the day.
+```
+
+Use `equal` to compare symbols
+Use `string=` to compare strings
+
+https://www.reddit.com/r/emacs/comments/8y144a/avoid_accidental_execution_in_comint_mode/
+
+----
+
 Some of these commands are specific to my configuration.
 
 ## Escaping out

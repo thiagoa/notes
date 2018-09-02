@@ -1,5 +1,62 @@
 # Clojure
 
+## Staging area
+
+**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized and distributed.
+
+Nice Clojure blog:
+
+https://cambium.consulting/articles/
+
+Clojure workflow:
+
+https://clojureverse.org/t/share-the-nitty-gritty-details-of-your-clojure-workflow/1208
+
+Isolating external deps:
+
+http://blog.josephwilk.net/clojure/isolating-external-dependencies-in-clojure.html
+
+Leiningen docs:
+
+https://github.com/technomancy/leiningen/tree/master/doc
+
+Gen class:
+
+https://kotka.de/blog/2010/02/gen-class_how_it_works_and_how_to_use_it.html
+
+Clojure compilation:
+
+https://blog.ndk.io/clojure-compilation2.html
+
+Connect to a running server with:
+
+```sh
+lein repl :connect 7000
+```
+
+`doto`:
+
+```clj
+(doto "a" (println) (println)) ;; Prints "a" "a", returns "a"
+```
+
+Good to use with java interop where there are side-effects:
+
+```clj
+(doto stage
+      (.setTitle "My JavaFX Application")
+      (.setScene scene)
+      (.show))
+```
+
+## clojure.core Cheat sheet
+
+https://world-in-atom.com/posts/2016-05-26-clojure-cheat-sheet/
+
+## Packages to check out
+
+- clj-http
+
 ## Web Development
 
 ### Ring
@@ -1926,3 +1983,15 @@ Note that you can't use java interop methods as first class functions.
 ```
 
 Of course, avoid using Java mutable objects.
+
+You can also do a chained call with `..`:
+
+```clj
+(.. obj meth1 meth2)
+```
+
+Or
+
+```clj
+(.. obj (meth1) (meth2 arg1))
+```
