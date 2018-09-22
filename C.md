@@ -100,3 +100,39 @@ int main() {
 ```
 
 "str" is saved as a constant and then copied into the stack, so it can be modified.
+
+For the following code:
+
+```c
+char s[] = "Some string";
+char *p = s;
+```
+
+We have the following properties:
+
+```c
+/*
+ * Both the array's address and the array itself point to...
+ * the first element's address.
+ */
+&s == s
+
+/*
+ * The pointer address in memory is different from
+ * the first element's location
+ */
+&p != p
+```
+
+## Stdio
+
+```c
+int main() {
+  char answer1[40];
+  char answer2[40];
+
+  fgets(answer1, 80, stdin);
+
+  printf("%s", answer1);
+}
+```

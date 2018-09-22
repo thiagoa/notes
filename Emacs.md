@@ -33,10 +33,10 @@ Some of these commands are specific to my configuration.
 
 ## Text editing
 
-| Keybinding | Description          |   |
-|------------|----------------------|---|
-| M-TAB      | ispell-complete-word | - |
-| M-(        | insert-parentheses   | - |
+| Keybinding | Description          |                                |
+|------------|----------------------|--------------------------------|
+| M-TAB      | ispell-complete-word | -                              |
+| M-(        | insert-parentheses   | -                              |
 
 ## Movement
 
@@ -198,9 +198,11 @@ Searching in all open buffers:
 
 ## Text editing
 
-| Keybinding | Description    |                  |
-|------------|----------------|------------------|
-| M-q        | fill-paragraph | Reflow paragraph |
+| Keybinding | Description        |                                |
+|------------|--------------------|--------------------------------|
+| M-q        | fill-paragraph     | Reflow paragraph               |
+| C-x C-o    | delete-blank-lines | Deletes contiguous blank lines |
+| C-x C-t    | transpose-lines    | -                              |
 
 ## Magit
 

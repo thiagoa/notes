@@ -2,7 +2,7 @@
 
 ## Staging area
 
-**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized and distributed.
+**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized.
 
 Nice Clojure blog:
 
@@ -606,6 +606,26 @@ Composing functions:
 ((comp inc #(* % %)) 2) ; 5
 ```
 
+### conj and into
+
+Implementing `into` with `conj`:
+
+```clj
+(defn my-into [left right]
+  (apply conj left right))
+
+(my-into {:a "b"} {:c "d"} {:e "f"}) ;; {:a "b", :c "d", :e "f"}
+  ```
+
+Implementing `conj` with `into`:
+
+```clj
+(defn my-conj [first & rest]
+  (into first rest))
+
+(my-conj {:a "b"} {:c "d"} {:e "f"}) ;; {:a "b", :c "d", :e "f"}
+```
+
 ### Misc
 
 All these functions accept any data structure and return sequences:
@@ -704,7 +724,10 @@ One thing to remember: `def` is evaluated at compile-time, which means `defn` is
 ;; is a single parameter.
 (map #(* %1 %1) [2 3])
 
-(#(* % 2) 2) ;4
+(#(* % 2) 2) ; 4
+
+;; And we can also use the "rest" syntax
+(#(- (apply + %&) %) 1 2 3 4 5) ; 13
 ```
 
 ### Let
@@ -1276,11 +1299,20 @@ We can use the generic `conj` function (which works on other data structures) wi
 (take 5 (repeatedly (fn [] 1)))
 ```
 
+A cool example: building a lazy and infinite sequence. Example, even numbers:
+
+```clj
+(defn even-numbers
+  ([] (even-numbers 0))
+  ([n] (cons n (lazy-seq (even-numbers (+ n 2))))))
+```
+
+- Lazy sequences are chunked: Clojure preemptivively realizes N
+  elements of the sequence. That's bad for side-effects.
 - `for` is similar to `doseq`, but `for` is lazy and `doseq` is eager.
 - Not all lazy sequences are unbounded. They can be finite or infinite.
 - Do not `count` nor `sort` nor `reduce` over a lazy sequence. These functions
   are eager.
-
 
 ### Vectors
 
