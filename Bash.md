@@ -2,6 +2,40 @@
 
 https://dev.to/rpalo/bash-brackets-quick-reference-4eh6
 
+## Substrings
+
+This is the easiest way:
+
+```bash
+$ a="one two three"
+$ echo ${a:1}
+ne two three
+$ echo ${a:4:3}
+two
+$ echo ${a:0:-1}
+one two thre
+```
+
+And the creepy POSIX way:
+
+```bash
+$ echo ${a#?}
+ne two three
+$ echo ${a#??}
+e two three
+$ echo ${a#??? [a-z][a-z][a-z] }
+three
+```
+
+The pound means to remove a pattern off the start of the string.
+
+We can also *get* the pattern instead of removing it:
+
+```bash
+$ echo ${a%${a#??? [a-z][a-z][a-z] }}
+one two
+```
+
 ## Conditionals
 
 Did a command exit successfully?
