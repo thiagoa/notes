@@ -1737,6 +1737,17 @@ Each thread can have its own value of the same var:
   (do-debug)) ; Prints true
 ```
 
+### Redefs
+
+Good for mocking functions and other vars.
+
+**Warning! Visible in all threads!**
+
+```clj
+(with-redefs [send-http-request (fn [] (println "Fake request being sent"))]
+  (run-code))
+```
+
 ## Macros
 
 ### Quote and unquote
