@@ -23,6 +23,30 @@ https://www.reddit.com/r/emacs/comments/8y144a/avoid_accidental_execution_in_com
 
 Some of these commands are specific to my configuration.
 
+## Helm
+
+### helm-buffers-list
+
+Search for buffers by major mode:
+
+```
+*ruby
+*ruby,lisp
+```
+
+Search for occurrences:
+
+```
+ @binding.pry
+ ```
+
+Match by directory name:
+
+```
+/controller course
+```
+
+
 ## Escaping out
 
 | Keybinding  | Description                        |                                                        |
