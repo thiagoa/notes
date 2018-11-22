@@ -5,13 +5,13 @@ build a mental framework about how they work?
 
 First, create the following table:
 
-```postgresql
+```sql
 CREATE TABLE accounts(id SERIAL PRIMARY KEY, name text);
 ```
 
 Now let's see some code:
 
-```postgresql
+```sql
 CREATE OR REPLACE FUNCTION accounts_changed()
   RETURNS trigger AS $DELIMITER$
 DECLARE
@@ -63,7 +63,7 @@ command.
 Regarding the `RETURN NULL`, let's see what happens when we use it
 along with a `BEFORE` trigger instead of `AFTER`:
 
-```postgresql
+```sql
 CREATE OR REPLACE FUNCTION accounts_changed()
   RETURNS trigger AS $DELIMITER$
 DECLARE
@@ -94,7 +94,7 @@ CREATE TRIGGER accounts_changed
 
 Now let's try an `INSERT`:
 
-```postgresql
+```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
 INSERT 0 0
 Time: 0.385 ms
@@ -102,7 +102,7 @@ Time: 0.385 ms
 
 Right, 0 rows inserted. Now change to `RETURN NEW` and rerun:
 
-```postgresql
+```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
 INSERT 0 1
 Time: 6.058 ms
@@ -118,7 +118,7 @@ Time: 0.340 ms
 
 Great. `NEW` is a `RECORD` kind and we can modify what ends up inserted:
 
-```postgresql
+```sql
 CREATE OR REPLACE FUNCTION accounts_changed()
   RETURNS trigger AS $DELIMITER$
 BEGIN
@@ -135,7 +135,7 @@ $DELIMITER$ LANGUAGE plpgsql;
 ... and the values of `name` and `description` get modified only if
 `name` is fruit (that's so weird... no better example right now):
 
-```postgresql
+```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('fruit');
 INSERT 0 1
 Time: 0.752 ms
