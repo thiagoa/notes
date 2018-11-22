@@ -60,6 +60,18 @@ Note that, even then, text columns can be big and surpass this limit.
 - We can listen to notifications with the `LISTEN channel_name;`
 command.
 
+Let's listen to the notifications:
+
+```sql
+[local] thiagoaraujo@pgpubsub=# [local] thiagoaraujo@pgpubsub=# LISTEN channel_name;
+LISTEN
+[local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
+INSERT 0 0
+Asynchronous notification "channel_name" with payload "{"operation" : "INSERT", "record" : {"id":722,"name":"foo","description":null}}" received from server process with PID 12169.
+```
+
+Awesome, the notification was sent!
+
 Regarding the `RETURN NULL`, let's see what happens when we use it
 along with a `BEFORE` trigger instead of `AFTER`:
 
@@ -97,7 +109,6 @@ Now let's try an `INSERT`:
 ```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
 INSERT 0 0
-Time: 0.385 ms
 ```
 
 Right, 0 rows inserted. Now change to `RETURN NEW` and rerun:
@@ -105,14 +116,12 @@ Right, 0 rows inserted. Now change to `RETURN NEW` and rerun:
 ```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
 INSERT 0 1
-Time: 6.058 ms
 [local] thiagoaraujo@pgpubsub=# SELECT * FROM accounts;
  id  | name | description
 -----+------+-------------
  715 | foo  | [NULL]
 (1 row)
 
-Time: 0.340 ms
 [local] thiagoaraujo@pgpubsub=#
 ```
 
@@ -138,7 +147,6 @@ $DELIMITER$ LANGUAGE plpgsql;
 ```sql
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('fruit');
 INSERT 0 1
-Time: 0.752 ms
 [local] thiagoaraujo@pgpubsub=# SELECT * FROM accounts ORDER BY id DESC LIMIT 1;
  id  |       name        |          description
 -----+-------------------+--------------------------------
