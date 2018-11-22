@@ -153,3 +153,11 @@ INSERT 0 1
  1   | fruit is a banana | or an orange? this is nonsense
 (1 row)
 ```
+
+### Nice URLs
+
+- [Official docs](https://www.postgresql.org/docs/9.2/plpgsql-trigger.html)
+- [SQL: PostgreSQL trigger for updating last modified timestamp](https://www.the-art-of-web.com/sql/trigger-update-timestamp/)
+- [How to use LISTEN and NOTIFY PostgreSQL commands in Elixir?](https://blog.lelonek.me/listen-and-notify-postgresql-commands-in-elixir-187c49597851)
+- [Random gist with some cool insights](https://gist.github.com/colophonemes/9701b906c5be572a40a84b08f4d2fa4e)
+- [Trabalhando com Triggers no PostgreSQL](https://www.devmedia.com.br/trabalhando-com-triggers-no-postgresql/33531) (portuguese)
