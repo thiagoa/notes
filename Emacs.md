@@ -323,6 +323,10 @@ Once in ibuffer;
 | S          | -       | Save selected buffers       |
 | D          | -       | Delete all selected buffers |
 
+## Elixir
+
+- [Alchemist basic usage](https://github.com/tonini/alchemist.el/blob/master/doc/basic_usage.md)
+
 ## Cider
 
 | Command     | Description                   |                                            |
