@@ -91,7 +91,7 @@ BEGIN
     )::text
   );
 
-  RETURN NEW;
+  RETURN NULL;
 END;
 $DELIMITER$ LANGUAGE plpgsql;
 
