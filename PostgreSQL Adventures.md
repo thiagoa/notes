@@ -34,7 +34,7 @@ $DELIMITER$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS accounts_changed ON accounts;
 
 CREATE TRIGGER accounts_changed
-  BEFORE INSERT OR UPDATE
+  AFTER INSERT OR UPDATE
   ON accounts
   FOR EACH ROW
     EXECUTE PROCEDURE accounts_changed();
@@ -66,7 +66,7 @@ Let's listen to the notifications:
 [local] thiagoaraujo@pgpubsub=# [local] thiagoaraujo@pgpubsub=# LISTEN channel_name;
 LISTEN
 [local] thiagoaraujo@pgpubsub=# INSERT INTO accounts(name) VALUES('foo');
-INSERT 0 0
+INSERT 0 1
 Asynchronous notification "channel_name" with payload "{"operation" : "INSERT", "record" : {"id":722,"name":"foo","description":null}}" received from server process with PID 12169.
 ```
 
