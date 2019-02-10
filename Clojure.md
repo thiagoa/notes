@@ -517,6 +517,26 @@ Joining a vector into a delimited string:
 (apply str (interpose ", " coll)) ; "1, 2, 3, 4, 5"
 ```
 
+To check for the presence of an element in a Vector use `some`.
+
+```clj
+;; With a set function
+;;
+;; Runs through each element: (#{2} 1), then (#{2} 2)... Found!
+;; Remember: sets implement the Runnable interface.
+(some #{2} [1 2 3 4]) ;; 2
+(some #{5} [1 2 3 4]) ;; nil
+
+;; With a function
+;;
+;; Note: some returns the first non-nil value returned by the higher order function:
+(some #(= % 2) [1 2 3 4]) ;; true
+(some #(= % 5) [1 2 3 4]) ;; false
+```
+
+
+
+
 ### Loops
 
 Recur rebinds values declared at the beginning of a loop:
@@ -1045,6 +1065,19 @@ We can explicitly define methods on the type:
 
 We could also have accessed the field directly, since it is public.
 
+Field access can actually be simplified. No need to go through `this`:
+
+```clj
+(defprotocol Nameable
+  (who [this]))
+
+(deftype APerson [name age]
+  Nameable
+  (who [_] name))
+
+(who (->APerson "Thiago" 18)) ;; Thiago
+```
+
 We can also make fields mutable:
 
 ```clj
@@ -1068,6 +1101,20 @@ We can also make fields mutable:
 
 Mutable fields become private and require a special type hint. Note
 that we are using the `set!` special form the mutate the `name` field.
+
+Or implement equality through a Java interface:
+
+```clj
+(deftype A [x y]
+  java.lang.Comparable
+  (equals [left right]
+    (and (= (type left) (type right))
+         (= (.-x left) (.-x right))
+         (= (.-y left) (.-y right)))))
+
+(= (->A 1 2) (->A 1 2)) ;; true
+(= (->A 1 2) (->A 3 4)) ;; false
+```
 
 Misc:
 
