@@ -997,7 +997,7 @@ To use the protocol functions:
 You can extend a record with another Protocol without having to alter the original definition:
 
 ```clj
-;;Nonsense example
+;; Nonsense example
 (defprotocol Ageable
   (next-age [this]))
 
@@ -1021,25 +1021,90 @@ Protocols can be used for any types, even built-in types:
   (to-url [f] (.toString f)))
 ```
 
-You can have a one-off implementation of a protocol (useful for testing):
+You can have one-off implementations of protocols (useful for testing):
 
 ```clj
-;; reify does not require implementing the whole protocol
+;; Note: reify does not require implementing the whole protocol
 (def one-off-impl (reify Ageable (next-age [this] 25)))
 (next-age one-off-impl)
 ```
 
-You can also use `extend-type` instead of `extend-protocol`:
+You can also use `extend-type` instead of `extend-protocol`. It's the
+same thing, but the type comes as the first argument:
 
 ```clj
-(extend-type java.io.File ToUrl (to-url [f] (.toString f)))
+(extend-type java.io.File
+  ToUrl
+  (to-url [f] (.toString f)))
 ```
+
+`deftype` is the more generic version of `defrecord`. `deftype` is for
+programming constructs, and `defrecord` for domain
+constructs. `defrecord` implements record-specific methods, while
+`deftype` defines just the functionality implemented by the user. For
+example:
+
+```clj
+(deftype APerson [name age])
+
+(:name (->APerson "Thiago" 18)) ;; nil... with a record this would return the name.
+(map->APerson {:name "Thiago" :age 18}) ;; Unable to resolve symbol: map->APerson in this context
+```
+
+We can explicitly define methods on the type:
+
+
+```clj
+(defprotocol Nameable
+  (who [this]))
+
+(deftype APerson [name age]
+  Nameable
+  (who [this] (.-name this)))
+
+(who (->APerson "Thiago" 18)) ;; Thiago
+```
+
+We could also have accessed the field directly, since it is public.
+
+We can also make fields mutable:
+
+```clj
+(defprotocol MutableNameable
+  (set-name [this name])
+  (get-name [this]))
+
+(deftype APerson [^:volatile-mutable name age]
+  MutableNameable
+  (set-name [this name] (set! (.-name this) name))
+  (get-name [this] (.-name this)))
+
+(def p (->APerson "Thiago" 18))
+
+(set-name p "Ogaiht")
+(get-name p) ;; "Ogaiht"
+
+(.-age p) ;; 18
+(.-name p) ;; No matching field found: name for class user.APerson
+```
+
+Mutable fields become private and require a special type hint. Note
+that we are using the `set!` special form the mutate the `name` field.
 
 Misc:
 
-- Protocols and multimethods are much the same, but multimethods are more generic.
-- Be careful with function name collisions
-- `deftype` is the more generic cousing to `defrecord`
+- You can think of records as hashmaps but with their own class. Which
+  means they have equality and hash semantics, and you can use
+  `assoc`, `get`, `count`, etc. Ref:
+  https://lispcast.com/deftype-vs-defrecord
+- If you don't need polymorphism, don't use records and stick with a
+  hashmap.
+- Protocols and multimethods are much the same, but multimethods are
+  more generic: they apply to anything and allow defining a custom
+  dispatch function.
+- Be careful with function name collisions!
+- Types are Java classes and can also be instantiate with the `.` Java
+  syntax: `(APerson. "Thiago" 18)`
 
 ## Error handling
 
@@ -2008,7 +2073,13 @@ To import a class:
 
 You don't need to import `java.lang`. Classes like `String` and `Boolean` are already available.
 
-To call a static method:
+To call a static field:
+
+```clj
+File/separator
+```
+
+Or static method:
 
 ```clj
 (File/separator) ;; "/"
