@@ -767,6 +767,42 @@ Implement `map` over `reduce`:
    (reduce reducer [] zipped-colls)))
 ```
 
+Implement the `fnil` function with the `with-defaults` name:
+
+```clj
+;; v1
+(defn with-defaults [f & defaults]
+  (let [merge-vec (partial map #(or %1 %2))
+        filler (replicate (count defaults) nil)]
+    (fn [& args]
+      (let [args (merge-vec args filler)
+            args (merge-vec args defaults filler)]
+        (apply f args)))))
+
+;; v2
+(defn with-defaults [f & defaults]
+  (let [filler (replicate (count defaults) nil)]
+    (fn [& args]
+      (let [args (map #(or %1 %2 %3) args defaults filler)]
+        (apply f args)))))
+
+;; Using:
+
+(defn favs [age food]
+  (format "I'm %d years old and my favorite food is %s." age food))
+
+(def favs-with-defaults (with-defaults favs 28 "waffles"))
+
+;; "I'm 64 years old and my favorite food is waffles."
+(favs-with-defaults 64 nil)
+
+(def favs-with-defaults (with-defaults favs nil "waffles"))
+
+;; "I'm 64 years old and my favorite food is waffles."
+(favs-with-defaults 64 nil)
+```
+
+
 ## Threading
 
 ```clj
