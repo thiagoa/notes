@@ -10,6 +10,8 @@
 - [Gen class](https://kotka.de/blog/2010/02/gen-class_how_it_works_and_how_to_use_it.html)
 - [Clojure compilation](https://blog.ndk.io/clojure-compilation2.html)
 - [clojure.core Cheatsheet](https://world-in-atom.com/posts/2016-05-26-clojure-cheat-sheet/)
+- [Clojure cheatsheet](http://jafingerhut.github.io/cheatsheet/clojuredocs/cheatsheet-tiptip-cdocs-summary.html)
+- [20 cool Clojure functions](https://blog.djy.io/20-cool-clojure-functions/)
 
 ## Packages to check out
 
