@@ -192,15 +192,26 @@ Searching in all open buffers:
 
 ## Help
 
-| Keybinding | Command           | Description                                    |
-|------------|-------------------|------------------------------------------------|
-| C-h k      | describe-key      | Describe key                                   |
-| C-h f      | describe-function | Describe function (can go to source)           |
-| C-h w      | where-is          | Describe keybinding for function (whereis cmd) |
-| C-h b      | describe-bindings | Show keybindings for current buffer            |
-| C-h m      | describe-mode     | Show current buffer modes                      |
-| C-h l      | find-library      | Goto a library source code (ex: window)        |
-| -          | eval-buffer       | Evaluates an elisp buffer                      |
+| Keybinding | Command            | Description                                    |
+|------------|--------------------|------------------------------------------------|
+| C-h k      | describe-key       | Describe key                                   |
+| C-h f      | describe-function  | Describe function (can go to source)           |
+| C-h w      | where-is           | Describe keybinding for function (whereis cmd) |
+| C-h b      | describe-bindings  | Show keybindings for current buffer            |
+| C-h m      | describe-mode      | Show current buffer modes                      |
+| C-h l      | find-library       | Goto a library source code (ex: window)        |
+| C-h S      | info-lookup-symbol | Lookup function or symbol in info manual       |
+| C-h i      | info               | Open info manual                               |
+| -          | eval-buffer        | Evaluates an elisp buffer                      |
+
+`m` - Open menu item in info manual
+`i` - Open index topic in info manual
+
+Example: `C-h i`, `m Elisp` `i defvar`
+
+`l` - Go back in info manual (browser back button)
+`r` - Go forward in info manual (browser forward button)
+``
 
 ## Finding files
 
@@ -346,11 +357,21 @@ Once in ibuffer;
 Clojure editing tips:
 
 - Suppose you typed the following at the REPL: `(cons [1 2] 3)`. Then you realize the arguments are in the wrong order. Place the cursor at `3`, then press `C-M-t` to swap the arguments.
+- `cider-undef` to undefine variables.
+- `cider-ns-reload` should theoretically reload the namespace and get rid of old references.
+- Press `,` on the REPL to access the REPL menu.
 
 References:
 
 - [Cider - Running tests](https://github.com/clojure-emacs/cider/blob/master/doc/running_tests.md)
+- [Cider - Misc features](https://github.com/clojure-emacs/cider/blob/master/doc/miscellaneous_features.md)
 - [Basic emacs + cider](https://www.braveclojure.com/basic-emacs/)
+
+## Xref explorations
+
+- `M-?` - xref-find-references
+- `M-.` - xref-find-definitions
+- `find-tag`
 
 ## Paredit
 
