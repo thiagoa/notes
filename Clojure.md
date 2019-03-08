@@ -788,6 +788,13 @@ Implement the `fnil` function with the `with-defaults` name:
       (let [args (map #(or %1 %2 %3) args defaults filler)]
         (apply f args)))))
 
+;; v3 - lazy is great! did not know concat returned a lazy sequence
+(defn with-defaults [f & defaults]
+  (fn [& args]
+    (let [args
+          (map #(or %1 %2) args (concat defaults (repeat nil)))]
+      (apply f args))))
+
 ;; Using:
 
 (defn favs [age food]
@@ -802,6 +809,9 @@ Implement the `fnil` function with the `with-defaults` name:
 
 ;; "I'm 64 years old and my favorite food is waffles."
 (favs-with-defaults 64 nil)
+
+"I'm 28 years old and my favorite food is cookies."
+((with-defaults favs 28) nil "cookies")
 ```
 
 
