@@ -536,8 +536,52 @@ To check for the presence of an element in a Vector use `some`.
 (some #(= % 5) [1 2 3 4]) ;; false
 ```
 
+Extracting arbitrary items from a map with `map`:
 
+```clj
+(map {:one 1 :two 2 :three 3} [:one :three]) ;; (1 3)
+```
 
+Or from a vector:
+
+```clj
+(map [1 2 3] [0 1]) ;; (1 2)
+```
+
+As a Rubyist, it often confuses me that one can `map` like this:
+
+```clj
+(map + [0 1] [1 0]) ;; (1 1)
+```
+
+### Metadata
+
+```clj
+(defn ^:private ^:dynamic sum [& args] (apply + args))
+```
+
+Same as any of these:
+
+```clj
+(defn ^{:private true :dynamic true} sum [& args] (apply + args))
+(defn sum {:private true :dynamic true} [& args] (apply + args))
+(defn sum ([& args] (apply + args)) ^:private})
+```
+
+You can store any arbitrary metadata:
+
+```clj
+(defn join
+  {:test #(assert (= (join "," [1 2 3]) "1,2,3"))}
+  [sep s]
+  (apply str (interpose sep s))
+```
+
+Retrieve the metadata with:
+
+```clj
+(:test (meta #'join)) ;; #object[user$fn__372 0x3ec2ecea "user$fn__372@3ec2ecea"]
+```
 
 ### Loops
 
@@ -1184,12 +1228,25 @@ Misc:
 ### Pre and post conditions
 
 ```clj
-;; % stands as the function's return value.
-(defn foo [book]
+;; % stands for the function's return value.
+(defn book-title [book]
   {:pre [(:title book)]
-   :post [(= "nada" %)]}
+   :post [(not (= "None" %))]}
 
   (:title book))
+```
+
+You can use pre and post conditions with higher-order functions for
+more flexibility:
+
+```clj
+(defn self-help-book-title! [book f]
+  {:pre [(= (:genre book) "Self-help")]}
+  (f book))
+
+(self-help-book-title! {:genre "Self-help"
+                        :title "The Power of Now"}
+                       title)
 ```
 
 ### Exceptions
