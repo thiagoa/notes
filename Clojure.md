@@ -554,6 +554,13 @@ As a Rubyist, it often confuses me that one can `map` like this:
 (map + [0 1] [1 0]) ;; (1 1)
 ```
 
+`keep` is map + filter:
+
+```clj
+(let [matrix [[0 1 nil 3] [4 nil 5 6]]]
+  (keep #(get-in matrix %) [[0 0] [0 2] [1 2]])) ; (0 5)
+```
+
 ### Metadata
 
 ```clj
