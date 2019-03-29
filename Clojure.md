@@ -1002,6 +1002,40 @@ You can mix and match `:as` with `:or`, etc.
 
 We are using `:genre` as a dispatcher function, but any dispatcher function will do.
 
+It's also possible to define multimethods with symbol inheritance behavior.
+
+```clj
+(defmulti os-name ::os)
+(defmethod os-name ::unix [m] (:name1 m))
+
+;; Error: no method in multimethod 'os-name' for dispatch value: :my-ns/mac-os
+(os-name {::os ::mac-os, :name1 "MacOS", :name2 "Darwin"})
+
+;; Let's make mac-os inherit from Unix
+(derive ::mac-os ::unix)
+
+(os-name {::os ::mac-os, :name1 "MacOS", :name2 "Darwin"}) ;; "MacOS"
+
+;; Now defining a specific implementation for mac-os,
+;; so that it doesn't inherit from Unix
+(defmethod os-name ::mac-os [m] (str (:name1 m) " " (:name2 m)))
+
+(os-name {::os ::mac-os, :name1 "MacOS", :name2 "Darwin"}) ;; "MacOS Darwin"
+```
+
+You can make a few interesting queries:
+
+```clj
+(parents ::mac-os) ;; #{:my-ns/unix}
+(ancestors ::mac-os) ;; #{:my-ns/unix}
+(derive ::mac-os ::next)
+(ancestors ::mac-os) ;; #{:my-ns/unix :my-ns/next}
+(descendants ::unix) ;;#{:joy.udp/mac-os}
+(isa? ::next ::unix) ;; false
+(isa? ::mac-os ::unix) ;; true
+(isa? ::mac-os ::next) ;; true (not so true actually...)
+```
+
 ### Records and Protocols
 
 Given the following record definition:
