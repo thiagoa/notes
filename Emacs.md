@@ -567,14 +567,15 @@ pkill -SIGUSR2 emacs
 
 ### Shortcuts
 
-| Keybinding | Command           |                                 |
-|------------|-------------------|---------------------------------|
-| M-:        | eval-expression   | Evaluate a line of lisp code    |
-| C-M-x      | eval-defun        | Evaluate current top-level sexp |
-| C-x C-e    | eval-last-sexp    | Evaluate previous sexp          |
-| -          | eval-region       | Evaluates an elisp region       |
-| C-h v      | describe-variable | Query elisp variable value      |
-| -          | ielm or repl      | An elisp repl                   |
+| Keybinding  | Command           |                                               |
+|-------------|-------------------|-----------------------------------------------|
+| M-:         | eval-expression   | Evaluate a line of lisp code                  |
+| C-M-x       | eval-defun        | Evaluate current top-level sexp               |
+| C-x C-e     | eval-last-sexp    | Evaluate previous sexp                        |
+| C-u C-x C-e | eval-last-sexp    | Evaluate previous sexp and insert into buffer |
+| -           | eval-region       | Evaluates an elisp region                     |
+| C-h v       | describe-variable | Query elisp variable value                    |
+| -           | ielm or repl      | An elisp repl                                 |
 
 ### Debugging
 
