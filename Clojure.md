@@ -1036,6 +1036,24 @@ You can make a few interesting queries:
 (isa? ::mac-os ::next) ;; true (not so true actually...)
 ```
 
+You can also avoid polluting the global namespace with symbol
+hierarchy information by passing the hierarchy information directly to
+`defmulti`:
+
+```clj
+(def os-hierarchy
+  (-> (make-hierarchy)
+      (derive ::mac-os ::unix)))
+
+(defmulti os-release :os :hierarchy #'os-hierarchy)
+(defmethod os-release ::unix [m] (:release m))
+
+(os-release {:os ::mac-os, :release "10.4"}) ;; 10.4
+
+(isa? ::mac-os ::unix) ;; false
+(isa? os-hierarchy ::mac-os ::unix) ;; true
+```
+
 ### Records and Protocols
 
 Given the following record definition:
