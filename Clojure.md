@@ -449,6 +449,9 @@ And given that we have a specification, we can run a property-based test for it 
 ;;   "ns-unmap" the binding before this command
 (require :reload 'clojure.data)
 
+;; reload-all forces reload of transitive dependencies
+(require :reload-all 'clojure.data)
+
 ;; Clears out a namespace binding
 (ns-unmap 'my-ns 'leftover-binding)
 

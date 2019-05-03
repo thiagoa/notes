@@ -88,7 +88,7 @@ And the fourth argument changes the comparison function to something else.
 
 ## Lambdas and macros
 
-TLDR; Pay attention at lambdas + macros. Follows a story:
+TLDR; Pay attention to lambdas + macros. Follows a story:
 
 To my surprise, the following code does not work:
 
