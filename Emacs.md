@@ -241,9 +241,12 @@ Example: `C-h i`, `m Elisp` `i defvar`
 
 ## Magit
 
-| Keybinding | Command      | Description                              |
-|------------|--------------|------------------------------------------|
-| C-x g      | magit-status | Status window (key must be map globally) |
+| Keybinding | Command      | Description                                               |
+|------------|--------------|-----------------------------------------------------------|
+| C-x g      | magit-status | Status window (key must be map globally)                  |
+| LL         | -            | Toggle visibility of margin                               |
+| Ll         | -            | Cycle different margin styles (varies dates)              |
+| C-u s      | -            | Stage untracked file (which allows commiting parts of it) |
 
 In status window:
 
