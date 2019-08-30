@@ -2,6 +2,37 @@
 
 ## Pointers
 
+**Asterisk**:
+
+- When used on the left side of an assignment, it declares a variable
+  of the "pointer" kind: `*x = y` (given y is already a pointer).
+- When applied to an x pointer variable - like `*x` - it gets the
+  actual value stored in the `x` pointer at that memory address.
+- You can't do `*x` if `x` is not a pointer because `*` takes the
+value of a pointer; if `x` is a variable, there will be an error.
+
+**Ampersand**:
+
+- Is used for grabbing a pointer to a variable. Example: `int
+  *y_address = &y;`
+
+```c
+#include <stdio.h>
+
+int main() {
+  int x = 1;
+
+  /* Grab a pointer to x */
+  int *y = &x;
+
+  /* print the value of the pointer, which is x itself */
+  printf("%i", *y);
+
+  return 0;
+}
+```
+
+
 ```c
 #include <stdio.h>
 
@@ -29,11 +60,11 @@ int main() {
   printf("The size of the x pointer is: %lu bytes\n", sizeof(x_address));
   printf("The size of the y pointer is: %lu bytes\n", sizeof(y_address));
 
-  int x_pointer_value = *x_address;
-  int y_pointer_value = *y_address;
-
   printf("x address is %p\n", x_address);
   printf("y address is %p\n", y_address);
+
+  int x_pointer_value = *x_address;
+  int y_pointer_value = *y_address;
 
   printf("x pointer value is %i\n", x_pointer_value);
   printf("y pointer value is %i\n", y_pointer_value);
@@ -47,6 +78,27 @@ int main() {
   return 0;
 }
 ```
+
+## Printing functions
+
+`fgets(array, sizeof(buffer), stdin)` - fgets takes the full size of
+the string including the null terminator.
+
+```c
+#include <stdio.h>
+
+int main() {
+  /* How many slots do we need to store "abracadabra"? */
+  /* 12, because the word's size is 11 + 1 null terminator */
+  char thing[12];
+
+  fgets(thing, 12, stdin);
+
+  printf("%s", thing);
+}
+```
+
+What if the size passed to `fget` exceeds the variable? It errors.
 
 ## Arrays
 
@@ -99,7 +151,8 @@ int main() {
 }
 ```
 
-"str" is saved as a constant and then copied into the stack, so it can be modified.
+"str" is saved as a constant and then copied into the stack, so that
+it can be modified.
 
 For the following code:
 

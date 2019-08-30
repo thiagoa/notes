@@ -290,8 +290,6 @@ When browsing the log you can open a specific revision of a file with `magit-fin
 
 ## Rectangles
 
-Question: How to activate rectangle keymappings?
-
 | Keybinding | Command                 | Description |
 |------------|-------------------------|-------------|
 | -          | delete-rectangle        | -           |
@@ -452,6 +450,8 @@ How to replace spaces with blank lines:
 
 ## Search and replace
 
+### Dired search and replace
+
 - Jump to dired
 - Run `find-grep-dired` and type out the search pattern.
 - Mark the files you want to run the replacement: `t`, `m`, `u` to unmark, etc.
@@ -461,6 +461,14 @@ How to replace spaces with blank lines:
 - Alternatively, open `ibuffer`, mark unsaved files with `*u`, `S` to save all files and `D` to close all of them.
 
 The easiest alternative is to run `C-c p r`, `projectile-replace`.
+
+### Search and replace tips
+
+- `\&` is a back reference to the entire search match in Query replace regexp.
+- `\#&` is the same back reference coerced to integer. `\#1`, `\#2`
+  are back references of groups also coerced to integer.
+
+Reference: https://www.reddit.com/r/emacs/comments/2lq0ps/equivalent_of_vims_g_command/
 
 ## Point and mark
 
