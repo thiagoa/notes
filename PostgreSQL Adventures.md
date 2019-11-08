@@ -1,3 +1,110 @@
+## Importing the chinook database
+
+Install [`pgloader`](https://www.google.com.br/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwj91JSDgdvlAhUqzlkKHfH9BEAQFjAAegQIABAB&url=https%3A%2F%2Fgithub.com%2Fdimitri%2Fpgloader&usg=AOvVaw2XVIjman1N1SPPgZt7IC95) and then run:
+
+```sh
+$ createdb chinook
+$ pgloader https://github.com/lerocha/chinook-database/raw/master/ChinookDatabase/DataSources/Chinook_Sqlite_AutoIncrementPKs.sqlite pgsql:///chinook
+```
+
+## About Functions
+
+Prefer SQL language over PL/pgSQL for stored procedures _when
+possible_. The latter might lead to misuse of control structures,
+while the former favors more optimized control structures that can be
+expressed in pure SQL.
+
+```sql
+-- chinook database
+-- Example usage: SELECT * FROM get_all_albums('AC/DC');
+CREATE OR REPLACE FUNCTION get_all_albums(
+  IN name TEXT,
+  OUT album TEXT,
+  OUT duration INTERVAL
+)
+  RETURNS SETOF RECORD AS $$
+DECLARE
+  rec RECORD;
+BEGIN
+  FOR rec IN SELECT albumid
+             FROM album
+             JOIN artist USING(artistid)
+             WHERE artist.name = get_all_albums.name
+  LOOP
+    SELECT title, SUM(milliseconds) * INTERVAL '1ms'
+    INTO album, duration
+    FROM ALBUM
+    LEFT JOIN track USING(albumid)
+    WHERE albumid = rec.albumid
+    GROUP BY title
+    ORDER BY title;
+
+    RETURN NEXT;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+
+This function is, of course, a waste. A `JOIN` + parameterization with
+SQL function would solve the problem - or even no SQL function.
+
+## RETURN NEXT and RETURN QUERY
+
+`RETURN next` and `RETURN query` work for functions declared to return
+`SETOF sometype` and with `OUT` function parameters (as per the last
+example). The former assumes you've already gave values to the `OUT`
+variables and will accumulate the current values into the result set.
+The latter lets you do the same but is more explicit because the
+query's result set is directly passed to `RETURN QUERY`. For instance,
+we could do:
+
+```sql
+RETURN QUERY SELECT album.name, album.duration FROM album ....
+```
+
+This works exactly as `RETURN NEXT` but is more explicit. Note that
+`RETURN NEXT` and `RETURN QUERY` can be mixed and matched.
+
+## JOIN statement with more than one table
+
+I haven't found documentation for this, but it's possible to do:
+
+```sql
+JOIN tbl1 ON ..., tbl2
+```
+
+This will join the entirety of `tbl2` records into the result set.
+This is even more useful when paired with a lateral join. You could
+join the 5 top results:
+
+```sql
+JOIN tbl1 ON ...,
+     LATERAL (SELECT ... FROM tbl3
+              ORDER BY ...
+              WHERE tbl1.foo = tbl3.bar
+              LIMIT 5) tbl2
+```
+
+Example:
+
+```sql
+-- chinook database
+-- Functions are allowed in lateral joins
+WITH four_albums AS(
+  SELECT artist.artistid
+  FROM album
+  JOIN artist USING(artistid)
+  GROUP BY artist.artistid
+  HAVING COUNT(*) = 4
+)
+
+SELECT artist.name, album.album, album.duration
+FROM four_albums
+JOIN artist USING(artistid),
+     LATERAL get_all_albums(artistid) album;
+```
+
 ## Functions, Triggers, Listen and Notify - A short case study
 
 How about I stop hacking over functions and triggers, and actually
