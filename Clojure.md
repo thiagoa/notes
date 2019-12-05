@@ -161,6 +161,40 @@ unload the namespace to get rid of the ghost:
 
 Then recompile and run the tests again.
 
+## Debugging tips
+
+How to debug intermediate values in a thread-first form?
+
+```clj
+(-> x foo bar bat)
+```
+
+Use `doto`:
+
+```clj
+(-> x foo bar (doto prn) bat)
+
+;; with markers
+(-> x
+    baz
+    (doto (prn '<-baz))
+    bar
+    (doto (prn '<-bar))
+    foo)
+```
+
+Or a nested sexp?
+
+```clj
+(foo (bar (baz x)))
+```
+
+Do this:
+
+```clj
+(foo (doto (bar (baz x)) prn))
+```
+
 ## REPL tips
 
 ### Require documentation
@@ -564,6 +598,43 @@ As a Rubyist, it often confuses me that one can `map` like this:
   (keep #(get-in matrix %) [[0 0] [0 2] [1 2]])) ; (0 5)
 ```
 
+A useful filter idiom:
+
+```clj
+(def teas [{:name "Dongding"
+            :type :oolong}
+           {:name "Longjing"
+            :type :green}
+           {:name "Baozhong"
+            :type :oolong}
+           {:name "Taiwan no. 18"
+            :type :black}
+           {:name "Dayuling"
+            :type :oolong}
+           {:name "Biluochun"
+            :type :green}])
+(filter (comp #{:oolong} :type) teas)
+```
+
+Instead of:
+
+```clj
+(filter #(= :oolong (:type %)))
+```
+
+If we want to filter two types:
+
+```clj
+(filter (comp #{:oolong :black} :type) teas)
+```
+
+Instead of:
+
+```clj
+(filter #(or (= :oolong (:type %)) (= :black (:type %))) teas)
+```
+
+
 ### Metadata
 
 ```clj
@@ -905,6 +976,11 @@ Implement the `fnil` function with the `with-defaults` name:
 ## Collections
 
 `for` and `doseq` and cousins, but the former returns a mapped vector. The latter is for side-effects.
+
+## Transducers
+
+- Specify the essence of a transformation
+- Doesn't create intermediate aggregates
 
 ## Printing to stdout
 
@@ -1366,13 +1442,56 @@ Update a value in a map with a function:
 
 ```clj
 (def book {:copies 1000})
-(update book :copies inc)
+(update book :copies inc) ; {:copies 1001}
 
 (def by-author
   {:name "Jane"
    :book {:title "Emma", :copies 1000}})
 
+; {:name "Jane", :book {:title "Emma", :copies 1001}}
 (update-in by-author [:book :copies] inc)
+```
+
+Maps are composed of `MapEntry` objects. For instance:
+
+```clj
+(def entry (clojure.lang.MapEntry/create :a "a"))
+(key entry) ; :a
+(val entry) ; "a"
+
+(class (first {:a "a"})) ; clojure.lang.MapEntry
+```
+
+How to map a hash to itself? That's pretty simple with the `juxt` idiom.
+
+```clj
+(into {} (map (juxt key val) {:a 1, :b 2})) ; {:a 1, :b 2}
+```
+
+We can apply more useful transformations with function composition:
+
+```clj
+; {:a 2, :b 3})
+(into {}
+      (map (juxt key (comp inc val))
+           {:a 1, :b 2}))
+```
+
+Interestingly, we can have the same results by using the 3-argument
+version (`(into to xform from)`) of the `into` function:
+
+```clj
+(into {}
+      (map (juxt key (comp inc val))) ; Turns into a transducer
+      {:a 1, :b 2}) ; {:a 2, :b 3})
+```
+
+`juxt` produces a one-argument function which applies each of the
+input functions to the argument, thereby collecting the results in a
+vector.
+
+```clj
+((juxt :a :b) {:a 1, :b 2}) ; [1 2]
 ```
 
 ### Sets
@@ -1569,7 +1688,7 @@ A cool example: building a lazy and infinite sequence. Example, even numbers:
 - `for` is similar to `doseq`, but `for` is lazy and `doseq` is eager.
 - Not all lazy sequences are unbounded. They can be finite or infinite.
 - Do not `count` nor `sort` nor `reduce` over a lazy sequence. These functions
-  are eager.
+are eager.
 
 ### Vectors
 
