@@ -346,7 +346,7 @@ Once in ibuffer;
 | C-c C-k     | cider-load-buffer             | Compile current file                       |
 | C-c C-z     | cider-switch-to-repl-buffer   | Alternate between repl and buffer          |
 | C-c M-j     | cider-jack-in                 | Open up repl                               |
-| C-c M-n     | cider-repl-set-ns             | Switch to current namespace                |
+| C-c M-n n   | cider-repl-set-ns             | Switch to current namespace                |
 | C-c C-t n   | cider-test-run-ns-tests       | -                                          |
 | C-c C-t t   | cider-test-run-test           | Run one test                               |
 | C-c C-t r   | cider-test-rerun-failed-tests | -                                          |

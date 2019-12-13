@@ -547,7 +547,7 @@ And given that we have a specification, we can run a property-based test for it 
 
 ## Functions
 
-### Common functionality
+### Cool idioms
 
 Joining a vector into a delimited string:
 
@@ -632,6 +632,33 @@ Instead of:
 
 ```clj
 (filter #(or (= :oolong (:type %)) (= :black (:type %))) teas)
+```
+
+`alter-var-root` is similar to redefining a var with `def`, but `def`
+doesn't guarantee against race conditions neither it is great for
+rebinding a var that belongs to another namespace. `alter-var-root`
+does its work atomically.
+
+```clj
+(def n 1)
+(alter-var-root #'n inc)
+n ; 2
+```
+
+`alter-var-root` requires an update function which receives the old
+value, but sometimes all we want is to set a new value from scratch,
+without "updating" the old one. For that we can use `constantly`:
+
+```clj
+(alter-var-root #'s/*explain-out* (constantly expound/printer))
+```
+
+`constantly` wraps a value in a function and takes any number of
+arguments, thus ignoring them:
+
+```clj
+((constantly 1) 1 2 "bananas") ; 1
+((constantly 1))
 ```
 
 
