@@ -135,21 +135,63 @@ OK
 (integer) 1
 ```
 
+## HyperLogLog
+
+This is great for frequency cap and the count-distinct problem
+(counting unique elements in a set). A great example is a counter for
+unique users based on session data. Note, however, that the count
+is O(1) and might have a small error rate.
+
+> Cardinality of the set: number of unique items.
+
+```redis
+> PFADD users id1
+(integer) 1
+> PFADD users id2
+(integer) 1
+> PFADD users id1
+(integer) 0
+> PFCOUNT users
+(integer) 2
+> PFADD other foo
+(integer) 1
+> PFCOUNT users other
+(integer) 3
+```
+
+When the cardinality of the set changes, `PFADD` returns 1, otherwise 0.
+
 ## Voting system
 
 [On Redis playground](http://github.com/thiagoa/redis-playground)
 
 ## Use cases
 
-To write session, temporary, or data with high-throughput needed.
+- Write session data
+- Write temporary data
+- Write data with high-throughput requirements
+
+Example:
 
 ```ruby
-def update_token(conn, token, user, item: nil)
+def logged_in?(conn, token)
+  conn.hget('login:', token)
+end
+
+def login(conn, token, user, item: nil)
   timestamp = Time.now.to_i
+
+  # Store logged in user by token
   conn.hset 'login:', token, user
+
+  # Add token to an ordered set to keep track of
+  # the most recent tokens ordered by timestamp.
+  # ZRANGE gets tokens ordered by ASC
+  # ZREVRANGE gets tokens ordered by DESC
   conn.zadd 'recent:', timestamp, token
 
   if item
+    # Keep track of the most recent viewed items by token
     conn.zadd "viewed:#{token}", timestamp, item
 
     # Keep most recent 25 viewed items
@@ -159,8 +201,10 @@ end
 
 LIMIT = 10_000_000
 
+# This should run in a daemon to clean sessions
 def clean_sessions(conn)
   loop do
+    # Return cardinality of the sorted set
     size = conn.zcard('recent:')
 
     if size <= LIMIT
@@ -168,6 +212,7 @@ def clean_sessions(conn)
       next
     end
 
+    # When past LIMIT, clean at most 100 oldest items per iteration
     end_index = [size - LIMIT, 100].min
     tokens = conn.zrange('recent:', 0, end_index - 1)
     session_keys = tokens.map { |t| "viewed:#{t}" }
