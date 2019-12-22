@@ -107,6 +107,10 @@ JOIN artist USING(artistid),
 
 ## Functions, Triggers, Listen and Notify - A short case study
 
+[EDIT] [Here's a good
+article](https://dev.to/citizen428/asynchronous-notifications-in-postgres-5963)
+about prototyping Listen/Notify with Websockets.
+
 How about I stop hacking over functions and triggers, and actually
 build a mental framework about how they work?
 
