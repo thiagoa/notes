@@ -43,8 +43,6 @@ abstraction.
 
 ## Code smells
 
-Because you know, I always forget names.
-
 ### Primitive obsession
 
 Using primitive data types to represent domain ideas.
@@ -106,3 +104,21 @@ Example:
 ```
 
 The smell in question is "duplicated code".
+
+### Divergent change
+
+A module has too many responsibilities and changes for too many
+reasons. Smell-wise, the opposite of shotgun surgery.
+
+## Refactorings
+
+### Move field
+
+When it feels like the field doesn't belong to a record or a class,
+move it where it belongs.
+
+### Encapsulate record
+
+When we want to control data access or updates to a certain record, a
+bag of raw data. The goal is to make it easier to change and reason
+about the code through encapsulation.
