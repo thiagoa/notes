@@ -724,3 +724,61 @@ Or purely with O files:
 $ gcc -c main.c
 $ gcc main.o reverse.o -o reverse
 ```
+
+## Structs
+
+Declaring and using a struct:
+
+```c
+#include <stdio.h>
+
+struct person_likes {
+  const char *favorite_food;
+  const char *favorite_language;
+};
+
+struct person {
+  const char *first_name;
+  const char *last_name;
+  int height;
+  int age;
+  struct person_likes likes;
+};
+
+// The struct gets copied
+void print_person_info(struct person p) {
+  printf("%s %s, %i years, height %i\n", p.first_name, p.last_name, p.age, p.height);
+  printf("Favorite food: %s", p.likes.favorite_food);
+  printf("Favorite language: %s", p.likes.favorite_language);
+}
+
+int main() {
+  struct person thiago = {"Thiago", "Silva", 70, 18, {"Vegan", "Clojure"}};
+  print_person_info(thiago);
+}
+```
+
+Give the struct a type with `typedef`:
+
+```c
+#include <stdio.h>
+
+// it is possible to omit the struct name (person) and only declare the type below
+typedef struct person {
+  const char *first_name;
+  const char *last_name;
+} struct_alias; // alias (type) can have the same name as the struct
+
+void print_person_info(struct_alias p) {
+  printf("%s %s\n", p.first_name, p.last_name);
+}
+
+int main() {
+  // can declare the type with either the alias or the struct itself
+  struct_alias thiago = {"Thiago", "Silva"};
+  struct person other = {"Fulano", ""};
+
+  print_person_info(thiago);
+  print_person_info(other);
+}
+```
