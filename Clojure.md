@@ -11,7 +11,9 @@
 - [Clojure compilation](https://blog.ndk.io/clojure-compilation2.html)
 - [clojure.core Cheatsheet](https://world-in-atom.com/posts/2016-05-26-clojure-cheat-sheet/)
 - [Clojure cheatsheet](http://jafingerhut.github.io/cheatsheet/clojuredocs/cheatsheet-tiptip-cdocs-summary.html)
+- [Official Clojure cheatsheet](https://clojure.org/api/cheatsheet)
 - [20 cool Clojure functions](https://blog.djy.io/20-cool-clojure-functions/)
+- [Ruby/Clojure Analogs](https://gist.github.com/thiagoa/b9137d45be3aef2c4878ea7cf9107c45)
 
 ## Packages to check out
 

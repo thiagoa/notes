@@ -105,37 +105,40 @@ def Duration(raw_value)
 end
 ```
 
-These examples are examples from [Ruby Tapas
+> These examples can be found in [Ruby Tapas
 430-433](https://www.rubytapas.com/tag/whole-value/).
 
-You can see that the `Duration` factory method already provides format
-validation. Only valid Whole Values can be instantiated, otherwise it
-is an Exceptional Value. With Whole Value, it is possible to skip
-basic validations because they are embedded into the Whole Values
-themselves. And some validation errors would be reported to the users
-via Exceptional Values.
+The `Duration` factory method provides implicit format validation. It
+will only construct valid objects or Exceptional Values (which are
+invalid or non-applicable objects). Basic validations are embedded
+into the Whole Values themselves, and validation errors are meant to
+be reported through Exceptional Values.
 
 To save this data into the database, one would either have to:
 
 - Save type + magnitude (e.g., Months, 3);
-- Standardize magnitude in days (or other measurement) for all
-  objects; initialize `Weeks`, `Days`, and `Months` with a magnitude
-  in days; implement the `inspect` method with the proper conversion.
-  For months, in particular, one would have to settle with either 30 or
-  31 days.
+- Standardize magnitude in days (or other measurement) for all objects.
+    - Initialize `Weeks`, `Days`, and `Months` with a magnitude in
+      days.
+    - Implement the `inspect` method with the proper date conversion.
+      Example: convert from days to months (number of days / 30 or
+      31).
 
 ### Exceptional Value
 
-An Exceptional Value is a value outside the range of a Whole Value,
+An Exceptional Value is a Value outside the range of a Whole Value,
 with either:
 
-- Domain meaning: The value has meaning within the domain model (even
-  though it will eventually get rejected), or it can be a placeholder
-  for missing data that may appear later.
-- Operational meaning: The value is invalid/meaningless, and will
-  thus produce Meaningless Behavior.
+- Domain meaning
+    - The value has meaning within the domain model (even
+      though it will eventually be rejected).
+    - The value can be a placeholder for missing data that may appear
+      later.
+- Operational meaning:
+    - The value is invalid/meaningless;
+    - The value will thus produce Meaningless Behavior.
 
-According to the author, one should use Exceptional Value when:
+According to the author, Exceptional Value should be used when:
 
 - When the inclusion of all possibilities would be confusing,
   difficult or otherwise inappropriate.
