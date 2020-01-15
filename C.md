@@ -725,7 +725,9 @@ $ gcc -c main.c
 $ gcc main.o reverse.o -o reverse
 ```
 
-## Structs
+## Structs, Unions, and Enums
+
+### Structs
 
 Declaring and using a struct:
 
@@ -745,7 +747,7 @@ struct person {
   struct person_likes likes;
 };
 
-// The struct gets copied
+// The struct gets copied over
 void print_person_info(struct person p) {
   printf("%s %s, %i years, height %i\n", p.first_name, p.last_name, p.age, p.height);
   printf("Favorite food: %s", p.likes.favorite_food);
@@ -782,3 +784,350 @@ int main() {
   print_person_info(other);
 }
 ```
+
+Data is stored in the same order as it's declared, in chunks of 64
+bits (depends on computer architecture). It will try to fit several
+fields into a single word, but sometimes there will be gaps to avoid
+fields from being split over word boundaries.
+
+**In C, all assignments copy data, unless you use a pointer. Parameters are passed by value.**
+
+The `print_person_info` function will clone the struct argument and
+drop it when the function finishes, so if we reassign a member, like
+`p.first_name = "Other";`, it won't modify the original struct.
+Therefore, we must do this:
+
+```c
+// Only works with parentheses! *p.first_name would be
+// the same as `(*p.first_name)`, whereas (*p).first_name
+// would be correct. The dot operator is evaluated before *.
+void print_person_info(struct_alias *p) {
+  (*p).first_name = "Other";
+  printf("%s %s\n", (*p).first_name, (*p).last_name);
+}
+```
+
+Instead of this:
+
+```c
+void print_person_info(struct_alias p) {
+  // Does not modify original!
+  p.first_name = "Other";
+  printf("%s %s\n", p.first_name, p.last_name);
+}
+```
+
+Let's do a super weird modification to `print_person_info` just to prove a point:
+
+```c
+#include <stdio.h>
+
+// it is possible to omit the struct name (person) and only declare the type below
+typedef struct person {
+  const char *first_name;
+  const char *last_name;
+} struct_alias; // alias (type) can have the same name as the struct
+
+void print_person_info(struct_alias *p) {
+  p->first_name = "Other";
+  printf("%s %s\n", p->first_name, p->last_name);
+}
+
+int main() {
+  // can declare the type with either the alias or the struct itself
+  struct_alias thiago = {"Thiago", "Silva"};
+  struct person other = {"Fulano", ""};
+
+  print_person_info(&thiago);
+  print_person_info(&other);
+}
+```
+
+Note the `->` syntax, where `p->first_name = "Other";` is a more
+readable shortcut to `(*p).first_name = "Other";`
+
+Nested struct access goes like this:
+
+```c
+#include <stdio.h>
+
+// Read declarations bottom-up
+
+typedef struct {
+  // Finally, this is a string pointer.
+  const char *element;
+} one;
+
+typedef struct {
+  // This is a pointer
+  one *element;
+} two;
+
+typedef struct {
+  // This is not a pointer, so the value gets copied over into "element"
+  two element;
+} three;
+
+int main() {
+  one number_one = {"Here I am!"};
+  two number_two = {&number_one};
+
+  // Number two gets copied over into number_three.element
+  three number_three = {number_two};
+
+  printf("Where am I? %s\n", number_three.element.element->element);
+}
+```
+
+If `three` had a pointer `element`, nested access would work like this:
+
+```c
+#include <stdio.h>
+
+typedef struct {
+  const char *element;
+} one;
+
+typedef struct {
+  one *element;
+} two;
+
+typedef struct {
+  // This is now a pointer
+  two *element;
+} three;
+
+int main() {
+  one number_one = {"Here I am!"};
+  two number_two = {&number_one};
+
+  // Now we'll pass in the number_two's address. No copy happens here.
+  three number_three = {&number_two};
+
+  printf("Where am I? %s\n", number_three.element->element->element);
+}
+```
+
+And there's a much better way to initialize a struct. Analog to
+keyword arguments, it is called "designated initializer":
+
+```c
+#include <stdio.h>
+
+typedef struct {
+  const char *element;
+} one;
+
+typedef struct {
+  one *element;
+} two;
+
+typedef struct {
+  two *element;
+} three;
+
+int main() {
+  // Uuuh! Much better
+  // To declare more than one member, use comma
+  one number_one = {.element="Here I am!"};
+  two number_two = {.element=&number_one};
+  three number_three = {.element=&number_two};
+
+  printf("Where am I? %s\n", number_three.element->element->element);
+}
+```
+
+### Unions and Enums
+
+A union allows you to store one value with one of several different
+data types in the same memory location. They are similar to structs,
+but there will only ever be one piece of data stored.
+
+```c
+#include <stdio.h>
+
+// - Looks like a struct, but it uses the "union" keyword
+// - float takes 4 bytes and short takes 2 bytes; the union will be 4 bytes long.
+typedef union {
+  short count;  // Count oranges
+  float weight; // Weigh grapes
+  float volume; // Measure juice
+} quantity;
+
+int main() {
+  quantity q1 = {5};
+  quantity q2 = {.weight=7.5};
+  quantity q3;
+
+  q3.volume = 5.1;
+
+  printf("What's the count? %i oranges\n", q1.count);
+  printf("What's the weight of the grapes? %fkg\n", q2.weight);
+  printf("What's the volume of the juice? %fl\n", q3.volume);
+}
+```
+
+Using unions with structs:
+
+```c
+#include <stdio.h>
+
+typedef union {
+  short count;
+  float weight;
+  float volume;
+} quantity;
+
+typedef struct {
+  const char *name;
+  const char *country;
+  quantity amount;
+} order;
+
+int main() {
+  // Declare all at once!
+  order apples = {"apples", "Brazil", .amount.weight=4.2};
+  printf("This order contains %2.2f lbs of %s\n", apples.amount.weight, apples.name);
+}
+```
+
+What if `quantity` were a pointer? Then the declaration syntax would
+be more verbose [with a compound
+literal](http://nickdesaulniers.github.io/blog/2013/07/25/designated-initialization-with-pointers-in-c/):
+
+```c
+#include <stdio.h>
+
+typedef union {
+  short count;
+  float weight;
+  float volume;
+} quantity;
+
+typedef struct {
+  const char *name;
+  const char *country;
+  quantity *amount;
+} order;
+
+int main() {
+  // More verbose
+  order apples = {"apples", "Brazil", .amount=&((quantity) {.weight=5})};
+  printf("This order contains %2.2f lbs of %s\n", apples.amount->weight, apples.name);
+}
+```
+
+There are some important subtleties to be aware of, for example:
+
+```c
+order o;
+o = {"apples", "Brazil", .amount=&((quantity) {.weight=5})};
+```
+
+This line does not compile because the compiler will think it's an
+array. When declared on the same line, however, the compiler can infer
+the type.
+
+It's a good practice to tag a union with an enum when used with
+structs because referencing unused union fields seem to be undefined
+behavior:
+
+```c
+#include <stdio.h>
+
+typedef enum {
+  EARNING, ADJUSTMENT
+} ledger_type;
+
+typedef union {
+  int sale_id;
+  const char *adjustment_type;
+} ledger_id;
+
+typedef struct {
+  ledger_type type;
+  ledger_id id;
+  int amount;
+} ledger_record;
+
+void print_ledger(ledger_record record) {
+  if(record.type == EARNING) {
+    printf("Earning with sale id %i cents\n", record.id.sale_id);
+  }
+  else if(record.type == ADJUSTMENT) {
+    printf("Adjustment with type %s\n", record.id.adjustment_type);
+  }
+
+  printf("Amount: %i cents\n", record.amount);
+  puts("--------------------");
+}
+
+int main() {
+  ledger_record record1 = {.type=EARNING, .id.sale_id=5, .amount=10000};
+  ledger_record record2 = {.type=ADJUSTMENT, .id.adjustment_type="Other", .amount=5000};
+
+  print_ledger(record1);
+  print_ledger(record2);
+}
+```
+
+Enums can also be declared "ad-hoc", without `typedef`:
+
+```c
+enum colors {BLACK, WHITE, BLUE};
+enum color favorite = BLUE;
+```
+
+At a super basic level, how do enums work internally? They store
+numbers behind the scenes for each item.
+
+### Structs with Bitfields
+
+```c
+typedef struct {
+  short salad;
+  short fruits;
+} side_dishes;
+```
+
+What's the problem this struct? We want boolean-like flags but each
+`short` takes up many bits.
+
+> C doesn't support binary literals, but it does support hexadecimal
+> literals like `int x = 0x54;`. Each hexa number can be converted to
+> its binary counterpart, matching a binary digit of length 4: (0101
+> 0100).
+
+Here's how we fix this struct:
+
+```c
+#include <stdio.h>
+
+typedef struct {
+  // bitfields should be declared as unsigned int
+  unsigned int salad:1;
+  unsigned int fruits:1;
+} side_dishes;
+
+int main() {
+  side_dishes extras = {.fruits=0, .salad=1};
+
+  if(extras.fruits) {
+    puts("Great, you've asked for fruits!");
+  }
+  else {
+    puts("Great, you've asked for salad!");
+  }
+}
+```
+
+Unfortunately, that only seems to work with structs because the
+computer can squash the fields together to save space. This doesn't compile:
+
+```c
+unsigned int foo:1 = 2;
+```
+
+We can also have a higher number of bits. For storing months, for
+example, we'd need 4 bits because 4 bits can store 0-15 while while 3
+bits can store 0-7.

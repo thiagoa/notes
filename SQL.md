@@ -1,12 +1,14 @@
 # SQL
 
-## Normalization
+## Designing Databases for Performance
+
+### Normalization
 
 The normalization process is fundamentally based on the application of
 atomicity to the world you are modeling. Keep in mind it is no silver
-bullet: there are very good reasons to break normalization rules.
+bullet: there are legitimate reasons to break normalization rules.
 
-### 1NF: Atomiticy
+#### 1NF: Atomiticy
 
 This form consists in identifying the atomic attributes and primary
 keys in a relation.
@@ -16,7 +18,7 @@ always be referred to in full. If you need to refer to parts of an
 attribute inside a where clause, it lacks the level of atomicity you
 need.
 
-Example: A text column containing important characteristics that
+**Example**: A text column containing important characteristics that
 should be broken up into different fields.
 
 This rule affords:
@@ -34,12 +36,14 @@ absence of the attribute.
 
 How far should the decomposition be taken? Atomicity depends on
 business requirements and whether you need some information to be
-indexed or not. Example: Storing addresses should be uniquely designed
-according to business requirements, no matter how company X solves the
-problem. On the other hand, trying to be too precise may create
-distracting and potentially irrelevant problems around edge cases.
+indexed or not.
 
-#### Primary keys
+**Example**: Storing addresses should be uniquely designed according
+to business requirements, no matter how company X solves the problem.
+On the other hand, trying to be too precise may create distracting and
+potentially irrelevant problems around edge cases.
+
+##### Primary keys
 
 - A primary key will often be compound.
 - Can't be ambiguous.
@@ -48,7 +52,7 @@ distracting and potentially irrelevant problems around edge cases.
   than some obscure sequential integer (not a very standard practice,
   but this note makes sense).
 
-### 2NF: Dependence on the Whole key
+#### 2NF: Dependence on the Whole key
 
 - For a relation to be in the 2NF, it must be in 1NF.
 - A relation shouldn't have attributes that depend on a subset of the
@@ -69,7 +73,7 @@ sorting to eliminate duplicates) will be required to filter out the
 data. Performance is better when the DBMS operates against a subset of
 the data (e.g., a new table).
 
-Example: `make, model, version, style, year, mileage` is the primary
+**Example**: `make, model, version, style, year, mileage` is the primary
 key of the `cars` table. However, all cars sharing `make, model,
 version, style` will have the same `seating` and `cargo_capacity`,
 regardless of `year` or `mileage`. These four columns make up the "car
@@ -85,7 +89,7 @@ the primary key and `seating` and `cargo_capacity` as columns.
   example, the engine and its characteristics will not depend on
   style.
 
-### 3NF: Attribute Independence
+#### 3NF: Attribute Independence
 
 3NF is reached when:
 
@@ -106,10 +110,239 @@ and inconsistent, whereas the 3NF simplifies this problem by design.
 Even though it requires some query adjustments, it will be flexible
 enough to accomodate changes.
 
-Example: A `phone_numbers` table storing `country` and `dialing_code`.
+**Example**: A `phone_numbers` table storing `country` and `dialing_code`.
 For each repeated `country_code`, the `dialing_code` will be repeated
 as well. Solution: Create a `country_info` table with `country_code`
 as PK.
+
+### Null columns
+
+> All columns in a row should ultimately contain a value, even if
+> business processes are such that various pieces of information are
+> entered from more than one source and/or at different points in time.
+
+What does NULL even mean? Its meaning is usually implicit and
+ambiguous.
+
+Possible signs of flawed DB design:
+
+- Columns of prominent tables mostly contain NULL values: Minor
+  inconvenience if the data is stored for informative purposes; bad if
+  the unknown values are supposed to help defining a result set.
+- Two columns can't contain a value at the same time; if one is
+  defined, the other must be NULL (indicates violation of either 2NF
+  or 3NF).
+
+NULL columns imply _three-valued_ logic. In a where clause, conditions
+can't be indeterminate; this is why some queries return unexpected
+result sets when encountering NULL values.
+
+- `where year in (1980, 1990, NULL)` doesn't return NULLs, but it
+_might_ return 1980 and 1990.
+- `where year not in (1980, 1990, NULL)` doesn't return anything. The
+engine doesn't know what NULL is, so it will skip all other rows.
+
+**Example**: 3 types of addresses are stored in the `customers` table:
+official, billing, and shipping, therefore NULL values come into play.
+What if we need the billing address in order to issue an invoice but
+it's NULL? Some options:
+
+- Use the official address: Not good because it requires implicit
+  rules which tend to be duplicated if there is more than one
+  application. The design should favor an explicit rule.
+- Replicate information: Not good because it introduces overhead and
+requires special processing during insert and update.
+
+This is a scenario of semantic inconsistency. A possible solution is
+to have an address table with `address_type` and `customer_id`, but
+not necessarily it's the best solution. What if an order must ship to
+many different branches? Does it imply a relationship with the order
+itself? Should we introduce a `shipments` table? How to tag addresses
+in this case?
+
+Good usage of NULL values: queries with LEFT JOINS and filters on
+NULL.
+
+### Boolean columns
+
+> Data for data’s sake is a path to disaster.
+
+Boolean columns aren't necessarily the best alternative for your
+business requirements. Aim to increase the density of your data! A
+boolean `order_completed` column might miss important information
+that's better modeled with columns like `completed_at` or
+`completed_by`. We return to the NULL value problem :( A possible
+alternative is to introduce a table to track order state.
+
+Also, sometimes it's better to combine boolean attributes into a
+single status column.
+
+### Subtypes
+
+Back to the NULL problem: sometimes a table will encompass more than
+one subtype. For example, an `employees` table will have NULL columns
+depending on whether the employee is a contractor or a permant
+employee. A possible solution is to use 3 tables:
+
+- `employees` will have a type identifier, either `contract` or `permanent`.
+- `permanent`
+- `contract`
+
+All of these tables would have `employee_number` as primary key.
+Assigning independent primary keys to the children tables would be a
+performance disaster (remember: the primary key is sometimes implicit
+and shadowed by an auto-increment column).
+
+By splitting out subtypes into different tables, and given that the
+queries are correctly written, we are more likely to plow through just
+relevant information, as opposed to a greater quantity of data if
+everything were in a single table.
+
+Subtypes can be used incorrectly when there is a super-generic parent
+table that is shared between many children just for the sake of
+implementing inheritance.
+
+### Types and implicit constraints
+
+> Data semantics belong in the DBMS, not in the application programs.
+
+**Example**: An identifier will be numeric depending on condition X,
+otherwise it will be alphabetic. In that case, the optimizer will lack
+the information to efficiently filter on the column. In a properly
+designed database, this is unacceptable.
+
+Avoid generic tables such as `configuration` with `parameter_name` and
+`parameter_value` as strings. A better scheme is:
+`configuration(parameter_id, parameter_name)`,
+`configuration_numeric(parameter_id, parameter_value)` where
+`parameter_value` has a numeric type.
+
+Constraints (FKs, check, enums, etc) contribute to ensuring the
+integrity of your data and provide information to the optimizer.
+
+### Excess flexibility
+
+> True design flexibility is born of sound data-modeling practices.
+
+A super generic table with `entity_id`, `attribute_id`, and
+`entity_value` will have no NULL values. However, queries would be
+extremely hard to "design" and would performly badly, involving dozens
+of joins; typing would be very weak, so integrity would be sacrificed;
+and so on.
+
+### Historical data
+
+> Handling data that both accumulates and changes requires very
+> careful design and tactics that vary according to the rate of
+> change.
+
+Proper modeling of historical data is often ignored by startups and
+companies breaking into the market. There are several ways to model
+historical data.
+
+*Example*: We want to model sale price changes. There are many
+alternatives, and the chosen one must match business requirements:
+
+- A `sale_prices` table with `sale_id`, `effective_from_date`, and
+`price`. Advantage: it would be possible to _program_ future prices.
+    - The same table with `effective_until_date` (end date instead of
+      start date), which is no improvement and it would imply one
+      record whose date would be either NULL or doomsday.
+    - The same table with `effective_from_date` + `number_of_days`.
+      Increases query complexity when querying by the end date.
+    - Denormalize the same table with `effective_from_date` and
+    `effective_until_date`, which would provide more flexibility to
+    design queries. Denormalization implies taking a risk with data
+    integrity and requires additional checks to maintain it.
+- 2 tables: a current table and a historical table, and plan a
+"migration" of rows from current to historical when prices change.
+This one might be complicated to maintain and programming future
+prices wouldn't be possible.
+
+### Design and Performance
+
+> The single largest contributory factor to poor performance is a
+> design that is wrong.
+
+Tuning is about:
+
+- Improving the overall condition of the system, according to current
+CPU, memory, IO, and sometimes taking advantage of the physical
+implementation of the DBMS. Rarely it surpasses 20 or 30% improvement.
+- Modifying of rewriting queries for better performance.
+
+Indexes don't really belong to the tuning of production databases.
+Most indexes can and must be correctly defined from the outset as part
+of the design process.
+
+### Processing Flow
+
+> A data model is not complete until consideration has also been taken
+> of data flow.
+
+The operating mode has a significant impact on the working system and
+the design thereof:
+
+- Asynchronous: Also called "batch programs", they are useful to
+  postpone processing large amounts of data. Ever increasing volumes
+  of data might require immediate processing, so good throughput and
+  efficiency of queries is usually a must.
+- Synchronous: A typical transaction (e.g., of a web app).
+
+If we choose synchronous operating mode over asynchronous, it might
+happen that a surge in traffic will paralyze the system at the worst
+possible moment; that's when you notice something is wrong. For async
+operating mode, you notice something is wrong when it takes an
+eternity to complete.
+
+Is your design ready to handle the processing flow required by your
+applications?
+
+### Centralization of Data
+
+> The nearer you are to your data, the faster you can get at it!
+
+Spreading data across many servers adds a considerable amount of
+complexity to a system (microservices, I'm looking at you!). The more
+complicated a structure, the less robust it is, due to:
+
+- Network: Slow response times. Can be improved when DB servers are
+  under the same network.
+- Combining data from different data sources: Might require temp
+  storage and renders DB setup (indexes, carefully thought-out
+  physical layout, etc) and optimizer work ineffective.
+
+Replication might be a better solution for data that needs to be
+globally available.
+
+### System Complexity
+
+> Database systems are joint ventures; they need the active and
+> cooperative participation of users, administrators, and developers.
+
+One thing to keep in mind when designing is: what happens if some
+piece of hardware breaks or some mistake is made with the data?
+
+- The recovery of a huge database takes a lot of time.
+- Spare duplicate DBs may help, but not at all with data mistakes
+(unless sync delay is unrealistically long).
+- It's even more complex with several related DBs, because one needs
+  to ensure correct synchronization after recovery to avoid data
+  corruption.
+
+### Conclusion
+
+> Successful data modeling is the disciplined application of what are,
+> fundamentally, simple design principles.
+
+It is striking to consider how much energy and intelligence can be
+wasted trying to solve performance problems that are born from the
+ignorance of elementary design principles.
+
+Attempts to fix performance problems with further denormalization
+might make the matter even more severe. One query might be tuned to
+run faster, but (a hypothetical) nightly batch program will have more
+data to plow through, so it might take twice as long to finish.
 
 ## Indexes
 
