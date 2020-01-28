@@ -4,17 +4,21 @@
 
 **Asterisk**:
 
-- When used on the left side of an assignment, it declares a variable
-  of the "pointer" kind: `*x = y` (given y is already a pointer).
-- When applied to an x pointer variable - like `*x` - it gets the
-  actual value stored in the `x` pointer at that memory address.
-- You can't do `*x` if `x` is not a pointer because `*` takes the
-value of a pointer; if `x` is a variable, there will be an error.
+- When used on the left side of the assignment, it declares a pointer
+  variable. For example: `type *x = y` (given that y is already a
+  pointer of the `type` type).
+- When applied to an `x` pointer variable as `*x`, it gets the value
+  stored at that memory address.
+- You can't do `*x` with a normal variable because `*` is used to
+  fetch the value of a pointer, and normal variables are not
+  pointers. There will be an error in that case.
 
 **Ampersand**:
 
-- Is used for grabbing a pointer to a variable. Example: `int
-  *y_address = &y;`
+- Ampersand is used for grabbing a pointer to a variable, i.e., a
+  handle to the memory address where that variable is stored (whether
+  the variable is stored in the stack, heap, constants, etc, is
+  another story.) Example: `int *y_address = &y;`
 
 ```c
 #include <stdio.h>
@@ -84,14 +88,14 @@ int main() {
 
 ### fgets
 
-`fgets(array, sizeof(buffer), stdin)` - takes the full size of
-the string including the null terminator.
+`fgets(array, sizeof(buffer), stdin)` - Takes the full length of the
+string including the null terminator.
 
 ```c
 #include <stdio.h>
 
 int main() {
-  /* How many slots do we need to store "abracadabra"? */
+  /* How many slots do we need for "abracadabra"? */
   /* 12, because the word's size is 11 + 1 null terminator */
   char thing[12];
 
@@ -101,12 +105,12 @@ int main() {
 }
 ```
 
-What if the size passed to `fget` exceeds the variable? It errors, so
-it should be avoided.
+What if the size passed to `fgets` exceeds the size of the variable?
+It errors, so it should be avoided.
 
 ### scanf
 
-`scanf(format_string, ...)` - the format string captures the size of
+`scanf(format_string, ...)` - The format string captures the length of
 the string NOT including the null terminator.
 
 ```c
@@ -138,9 +142,10 @@ int main() {
 
 ## Strings and Arrays
 
-Useful link: http://www.eskimo.com/~scs/cclass/notes/sx10f.html
+Here's an [useful link](http://www.eskimo.com/~scs/cclass/notes/sx10f.html).
 
-Literal strings are stored within "constants", so you can't modify them:
+Literal strings are stored in the constants area, so you can't modify
+them:
 
 ```c
 /* Compiles but doesn't run (bus error) */
@@ -148,11 +153,9 @@ char *str = "2 Bananas";
 str[0] = '3';
 ```
 
-The above var declaration works as:
-
 1. The program loads the string into the constants area;
-2. The program loads the string into the stack, which points at the
-   read-only reference from constants.
+2. The program allocates a pointer to the read-only reference from the
+   constants area.
 
 For more security, declare the string as a constant:
 
@@ -173,11 +176,11 @@ str[0] = '3';
 Now it will work as:
 
 1. The program loads the string into the constants area,
-2. The program copies the string into the stack. The copy can then be
-   modified.
+2. The program _allocates_ a modifiable copy of the string into the
+   stack.
 
-It all boils down to how C manages the memory. In the compiled
-program, array declarations vanish and get replaced with their memory
+It all boils down to how C manages memory. Within the compiled
+program, array declarations vanish and are replaced with their memory
 addresses.
 
 The distinction between pointer and array is confusing. At the
@@ -298,8 +301,8 @@ int main() {
 
 ### Functions returning strings (pointers)
 
-In C, we can't return a pointer to a variable allocated inside a
-running function. For example, this is invalid code:
+In C, we can't return a pointer to a variable allocated inside the
+stack. For example, this is invalid code:
 
 ```c
 #include <stdio.h>
@@ -1131,3 +1134,279 @@ unsigned int foo:1 = 2;
 We can also have a higher number of bits. For storing months, for
 example, we'd need 4 bits because 4 bits can store 0-15 while while 3
 bits can store 0-7.
+
+## Data Structures / Dynamic Memory
+
+### Linked lists
+
+Arrays have fixed-size. How to implement a "dynamic array" in C? With
+a linked list.
+
+Here's the code for a simple linked list:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct ll_node {
+  char *contents;
+  struct ll_node *next;
+} ll_node;
+
+ll_node *create_node(const char *contents) {
+  ll_node *node = malloc(sizeof(ll_node));
+
+  node->contents = strdup(contents);
+  node->next = NULL;
+
+  return node;
+}
+
+ll_node *create_list() {
+  char contents[80];
+  ll_node *root = NULL;
+  ll_node *prev = NULL;
+
+  while (fgets(contents, 80, stdin) != NULL) {
+    contents[strlen(contents) - 1] = '\0'; // Strip off new line
+    ll_node *node = create_node(contents);
+
+    if (root == NULL) root = node;
+    if (prev != NULL) prev->next = node;
+
+    prev = node;
+  }
+
+  return root;
+}
+
+void print_list(ll_node *node) {
+  for (; node != NULL; node = node->next) {
+    puts(node->contents);
+  }
+
+  puts("");
+}
+
+ll_node *insert_node(ll_node *root, ll_node *node) {
+  if (root == NULL)
+    return NULL;
+
+  node->next = root;
+
+  return node;
+}
+
+void free_list(ll_node *node) {
+  if (node == NULL)
+    return;
+
+  if (node->next)
+    free_list(node->next);
+
+  free(node->contents);
+  free(node);
+}
+
+int main() {
+  ll_node *root = create_list();
+
+  print_list(root);
+
+  root = insert_node(root, create_node("Zero"));
+  root = insert_node(root, create_node("Minus One"));
+
+  print_list(root);
+
+  free_list(root);
+}
+```
+
+Assume the following `file.txt`:
+
+```
+One
+Two
+Three
+Four
+Five
+```
+
+And the command:
+
+```sh
+$ ./linked_list < file.txt
+```
+
+Some notes:
+
+- We're using dynamic heap allocation with `malloc`and `free`.
+  Remember: the stack keeps dropping variables;
+- `malloc` returns a general-purpose pointer with type `void*`;
+- The struct is recursive. The only way to declare a recursive struct
+  is with a `struct ll_node *next` field; Just `ll_node *next` (with
+  type instead of struct name) won't work;
+- The `next` field must be a pointer; it can't be a copy of the struct
+  because C must know the quantity of memory beforehand;
+- When collecting input with a single temporary string variable,
+ `strdup` is necessary because otherwise all strings would be the same
+ and point at the same memory address;
+- Depending on the C implementation, `strdup` will allocate heap
+  memory. Therefore, you must remember to free it up;
+- You could connect nodes manually with something like:
+
+        ll_node *node1 = create_node("One");
+        ll_node *node2 = create_node("Two");
+        node1->next = &node2;
+
+- Always initialize empty pointers to `NULL`, otherwise C will point
+  at memory garbage.
+
+A subtle memory leak may occur in the following operation:
+
+```c
+ll_node *replace_node(ll_node *node, ll_node *new_node, int pos) {
+  int i = 0;
+
+  ll_node *prev = NULL;
+  ll_node *root = node;
+
+  for (; node != NULL; node = node->next) {
+    if (i == pos) {
+      if (prev == NULL) {
+        root = new_node;
+      }
+      else {
+        prev->next = new_node;
+      }
+
+      new_node->next = node->next;
+      break;
+    }
+
+    prev = node;
+    i++;
+  }
+
+  return root;
+}
+
+int main() {
+  ll_node *root = create_list();
+
+  print_list(root);
+
+  root = insert_node(root, create_node("Zero"));
+  root = insert_node(root, create_node("Minus One"));
+
+  print_list(root);
+
+  root = replace_node(root, create_node("Replacement"), 1);
+
+  print_list(root);
+
+  free_list(root);
+}
+```
+
+If we run valgrind, which intercepts calls to `malloc` and `free`, it indeed shows a problem:
+
+```sh
+==25463==
+==25463== HEAP SUMMARY:
+==25463==     in use at exit: 27,725 bytes in 172 blocks
+==25463==   total heap usage: 207 allocs, 35 frees, 36,331 bytes allocated
+==25463==
+==25463== 21 (16 direct, 5 indirect) bytes in 1 blocks are definitely lost in loss record 5 of 47
+==25463==    at 0x1000D5CF5: malloc (in /usr/local/Cellar/valgrind/HEAD-fc32b97/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==25463==    by 0x100000B7A: create_node (linked_list.c:11)
+==25463==    by 0x100000E90: main (linked_list.c:101)
+==25463==
+==25463== 48 bytes in 2 blocks are possibly lost in loss record 22 of 47
+==25463==    at 0x1000D6350: calloc (in /usr/local/Cellar/valgrind/HEAD-fc32b97/lib/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==25463==    by 0x1005DE742: map_images_nolock (in /usr/lib/libobjc.A.dylib)
+==25463==    by 0x1005F155F: __objc_personality_v0 (in /usr/lib/libobjc.A.dylib)
+==25463==    by 0x10000847A: dyld::notifyBatchPartial(dyld_image_states, bool, char const* (*)(dyld_image_states, unsigned int, dyld_image_info const*), bool, bool) (in /usr/lib/dyld)
+==25463==    by 0x10000862D: dyld::registerObjCNotifiers(void (*)(unsigned int, char const* const*, mach_header const* const*), void (*)(char const*, mach_header const*), void (*)(char const*, mach_header const*)) (in /usr/lib/dyld)
+==25463==    by 0x100239A26: _dyld_objc_notify_register (in /usr/lib/system/libdyld.dylib)
+==25463==    by 0x1005DE233: environ_init (in /usr/lib/libobjc.A.dylib)
+==25463==    by 0x1001D0E35: _os_object_init (in /usr/lib/system/libdispatch.dylib)
+==25463==    by 0x1001DCAD1: libdispatch_init (in /usr/lib/system/libdispatch.dylib)
+==25463==    by 0x1000E09C4: libSystem_initializer (in /usr/lib/libSystem.B.dylib)
+==25463==    by 0x10001B591: ImageLoaderMachO::doModInitFunctions(ImageLoader::LinkContext const&) (in /usr/lib/dyld)
+==25463==    by 0x10001B797: ImageLoaderMachO::doInitialization(ImageLoader::LinkContext const&) (in /usr/lib/dyld)
+==25463==
+==25463== LEAK SUMMARY:
+==25463==    definitely lost: 16 bytes in 1 blocks
+==25463==    indirectly lost: 5 bytes in 1 blocks
+==25463==      possibly lost: 48 bytes in 2 blocks
+==25463==    still reachable: 8,392 bytes in 8 blocks
+==25463==         suppressed: 19,264 bytes in 160 blocks
+==25463== Reachable blocks (those to which a pointer was found) are not shown.
+==25463== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+```
+
+Note the debug info with the line numbers at the top; If the
+executable is compiled with the `-g` flag, Valgrind will tell which
+lines in the source code put the problematic data on the heap. Also
+note "definitely lost".
+
+What's the problem with `replace_node`? It replaces a node but it does
+not free up the replaced node. To fix let's break up `free_list`:
+
+```c
+void free_node(ll_node *node) {
+  if (node == NULL)
+    return;
+
+  free(node->contents);
+  free(node);
+}
+
+void free_list(ll_node *node) {
+  if (node != NULL && node->next)
+    free_list(node->next);
+
+  free_node(node);
+}
+```
+
+Now we add the code to free up the replaced node:
+
+```c
+ll_node *replace_node(ll_node *node, ll_node *new_node, int pos) {
+  int i = 0;
+
+  ll_node *prev = NULL;
+  ll_node *root = node;
+
+  for (; node != NULL; node = node->next) {
+    if (i == pos) {
+      if (prev == NULL) {
+        root = new_node;
+      }
+      else {
+        prev->next = new_node;
+      }
+
+      new_node->next = node->next;
+      free_node(node); // This!
+      break;
+    }
+
+    prev = node;
+    i++;
+  }
+
+  return root;
+}
+```
+
+### Other data structures
+
+Among others, you can build the following data structures using structs:
+
+- Doubly linked list (with recursive structs)
+- Binary tree (with recursive structs)
+- Hash map (requires other data structures such as arrays)
