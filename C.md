@@ -132,7 +132,20 @@ int main() {
 }
 ```
 
-## The C Memory
+## Operators
+
+- `^` - XOR operator
+
+        #include <stdio.h>
+
+        int main() {
+          // 1000001 XOR 0011111 = 1011110 (94)
+          printf("%i", ('A' ^ 31)); // 94
+          printf("%i", ('A' ^ 31) ^ 31); // 65 (example of XOR encryption)
+        }
+
+
+# The C Memory
 
 - Stack
 - Heap (dynamic memory)
@@ -1137,9 +1150,16 @@ bits can store 0-7.
 
 ## Data Structures / Dynamic Memory
 
+Here's a [good
+link](https://www.geeksforgeeks.org/dynamic-memory-allocation-in-c-using-malloc-calloc-free-and-realloc/)
+about dynamic memory allocation.
+
+[Why is calloc slower than
+malloc?](https://www.quora.com/Is-calloc-really-slower-than-malloc-because-it-initializes-memory-to-0-initialization-takes-time-whereas-malloc-doesnt-Is-the-performance-difference-between-these-2-functions-significant)
+
 ### Linked lists
 
-Arrays have fixed-size. How to implement a "dynamic array" in C? With
+Arrays are fixed-size. How to implement a "dynamic array" in C? With
 a linked list.
 
 Here's the code for a simple linked list:
@@ -1242,7 +1262,7 @@ $ ./linked_list < file.txt
 Some notes:
 
 - We're using dynamic heap allocation with `malloc`and `free`.
-  Remember: the stack keeps dropping variables;
+  Remember: the stack drops allocated variables after a function returns;
 - `malloc` returns a general-purpose pointer with type `void*`;
 - The struct is recursive. The only way to declare a recursive struct
   is with a `struct ll_node *next` field; Just `ll_node *next` (with
@@ -1410,3 +1430,495 @@ Among others, you can build the following data structures using structs:
 - Doubly linked list (with recursive structs)
 - Binary tree (with recursive structs)
 - Hash map (requires other data structures such as arrays)
+
+## Function pointers
+
+We want to make a generic function to iterate over a linked list. We
+can use a function pointer, which is always declared along with its
+return type and argument types. Every function name is a pointer to a
+function.
+
+The notation for a function pointer is:
+
+```
+return_type (* name_of_new_var)(...parameter_types)
+```
+
+Here's an example:
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct ll_node {
+  char *contents;
+  struct ll_node *next;
+} ll_node;
+
+ll_node *create_node(const char *contents) {
+  ll_node *node = malloc(sizeof(ll_node));
+
+  node->contents = strdup(contents);
+  node->next = NULL;
+
+  return node;
+}
+
+// Takes a function pointer as the last argument
+void walk_list(ll_node *node, void (*action)(ll_node*)) {
+  for (; node != NULL; node = node->next) {
+    action(node); // (*action)(node) would also work
+  }
+}
+
+void print_node(ll_node *node) {
+  puts(node->contents);
+}
+
+void unlink_node(ll_node *node) {
+  node->next = NULL;
+}
+
+int main() {
+  ll_node *one = create_node("One");
+  ll_node *two = create_node("Two");
+  ll_node *three = create_node("Three");
+
+  one->next = two;
+  two->next = three;
+
+  walk_list(one, print_node); // Could've been *print_node or &print_node
+  walk_list(one, unlink_node);
+  walk_list(one, print_node); // Prints only "One" because the nodes were unlinked
+}
+```
+
+Function pointers are great, but they are still pretty limited. There
+are no lambdas or closures in C.
+
+What if we wanted to find a node using a variable condition (node
+pointer, contents, position)? In most languages I would use closures
+and higher order functions to achieve it. It is possible in C, but
+it's pretty limited and you would have to duplicate the code from
+`walk_list`. Let's see how to achieve that:
+
+```c
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct ll_node {
+  char *contents;
+  struct ll_node *next;
+} ll_node;
+
+ll_node *create_node(const char *contents) {
+  ll_node *node = malloc(sizeof(ll_node));
+
+  node->contents = strdup(contents);
+  node->next = NULL;
+
+  return node;
+}
+
+ll_node* find_node(ll_node *node, void* cond, short (*filter)(ll_node*, int, void*)) {
+  int i = 0;
+
+  for (; node != NULL; node = node->next) {
+    if (filter(node, i, cond)) {
+      return node;
+    }
+
+    i++;
+  }
+
+  return NULL;
+}
+
+short find_by_contents(ll_node *node, int i, void* contents) {
+  (void) i;
+  return strcmp(node->contents, (char*) contents) == 0;
+}
+
+short find_by_position(ll_node *node, int i, void* pos) {
+  (void) node;
+  return i == *(int*) pos;
+}
+
+short find_by_node(ll_node *node, int i, void *target_node) {
+  (void) i;
+  return node == target_node;
+}
+
+int main() {
+  ll_node *one = create_node("One");
+  ll_node *two = create_node("Two");
+  ll_node *three = create_node("Three");
+
+  one->next = two;
+  two->next = three;
+
+  int search_pos = 1;
+
+  ll_node *nodes[] = {
+    find_node(one, "Three", find_by_contents),
+    find_node(one, &search_pos, find_by_position),
+    find_node(one, two, find_by_node)
+  };
+
+  for (int i = 0; i < (int) (sizeof(nodes) / sizeof(nodes[0])); i++) {
+    if (nodes[i]) {
+      puts(nodes[i]->contents);
+    }
+  }
+}
+```
+
+In C, we wouldn't declare functions for every banal condition, like
+`find_by_two`, `find_by_third_pos`, etc, even though we could. That
+would be overly verbose.
+
+Above, we can see that:
+
+- The `cond` argument goes into `find_node`, and not `find_by_`. In
+Ruby, that would be something like: `one.find_node { |node, _i|
+node.contents == "Two" }`
+- The lack of lambdas and function composition means that any extra
+arguments used by subsequent function pointers must be delegated
+through the main function.
+- We are using a generic `void*` pointer argument to relax on accepted
+types, so that we can delegate the pointer argument to any filter
+function.
+- Since `void*` is a pointer, we had to bear the inconvenience of
+allocating `search_pos` in the stack so that it can be passed as a
+pointer. Imagine doing that for multiple searches in the same
+function... it would not be pretty.
+- We are silencing unused variable warnings with `(void) var`. We
+could make a macro for that: `#define UNUSED(x) (void)(x)`.
+- Not a big deal, but we had to repeat the code to walk the linked
+list. I can't see how to combine functions in this case.
+
+You can declare function pointers like any other variables:
+
+```c
+#include <stdio.h>
+
+int int_identity(int n) {
+  return n;
+}
+
+// Super silly examples here...
+
+char** char_array_identity(char** ar) {
+  return ar;
+}
+
+int main() {
+  int (*identity1)(int) = int_identity;
+  char** (*identity2)(char**) = char_array_identity;
+
+  char* list[] = {"Foo"};
+
+  printf("%i", identity1(2));
+  printf("%s", identity2(list)[0]);
+}
+```
+
+There are built-in functions that take advantage of this feature:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int compare_scores(const void* a, const void* b) {
+  return *(int*) a - *(int*) b;
+}
+
+int main() {
+  int scores[] = {5, 10, 2, 1, 20, 8};
+  int nlen = sizeof(scores[0]);
+  int len = sizeof(scores) / nlen;
+
+  qsort(scores, len, nlen, compare_scores);
+
+  for (int i = 0; i < len; i++) {
+    printf("%i ", scores[i]);
+  }
+}
+```
+
+And they can be even more complex in the case of strings:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int compare_names(const void* a, const void* b) {
+  // Why char**? qsort converts a string, which is already a pointer,
+  // into a void pointer, so we have to dereference the pointer-to
+  // pointer-to-char reference with **
+  char** left = (char**) a;
+  char** right = (char**) b;
+
+  // To get the value of the char pointer,  we have to dereference it again;
+  return strcmp(*left, *right);
+}
+
+int main() {
+  const char* names[] = {"d", "a", "F", "C"};
+  int nlen = sizeof(names[0]);
+  int len = sizeof(names) / nlen;
+
+  qsort(names, len, nlen, compare_names);
+
+  for (int i = 0; i < len; i++) {
+    printf("%s ", names[i]); // C F a d
+  }
+}
+```
+
+There can be arrays of function pointers as well. How to refactor the
+following example and kill the `switch` statement?
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+enum print_type {INT, STRING};
+typedef struct {
+  enum print_type type;
+  void* value;
+} printable;
+
+void print_int(printable item) {
+  printf("%i\n", *((int*) item.value));
+}
+
+void print_string(printable item) {
+  printf("%s\n", (char*) item.value);
+}
+
+void print(printable item) {
+  switch (item.type) {
+  case INT:
+    print_int(item);
+    break;
+  case STRING:
+    print_string(item);
+  }
+}
+
+int main() {
+  int n = 2;
+  printable to_print[] = {{INT, &n}, {STRING, "Thiago"}, {STRING, "..."}};
+  int len = sizeof(to_print) / sizeof(to_print[0]);
+
+  for (int i = 0; i < len; i++) {
+    print(to_print[i]); // 2, Thiago, ... (each in its own line)
+  }
+}
+```
+
+Easy:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// This looks a lot like polymorphism...
+
+enum print_type {INT, STRING};
+typedef struct {
+  enum print_type type;
+  void* value;
+} printable;
+
+void print_int(printable item) {
+  printf("%i\n", *((int*) item.value));
+}
+
+void print_string(printable item) {
+  printf("%s\n", (char*) item.value);
+}
+
+void (*printable_fns[])(printable) = {print_int, print_string};
+
+int main() {
+  int n = 2;
+  printable to_print[] = {{INT, &n}, {STRING, "Thiago"}, {STRING, "..."}};
+  int len = sizeof(to_print) / sizeof(to_print[0]);
+
+  for (int i = 0; i < len; i++) {
+    printable_fns[to_print[i].type](to_print[i]);
+  }
+}
+```
+
+The array must be declared in the same order as the enum to take
+advantage of this trick. Enum values start at 0, and so do arrays;
+
+## Variadic functions
+
+Let's take the previous example as a starting point. We want to have a
+`print_all` function with variadic arguments that prints whatever
+variadic args are passed in.
+
+```c
+#include <stdio.h>
+#include <stdarg.h>
+
+enum print_type {INT, STRING};
+typedef struct {
+  enum print_type type;
+  void* value;
+} printable;
+
+void print_int(printable item) {
+  printf("%i\n", *((int*) item.value));
+}
+
+void print_string(printable item) {
+  printf("%s\n", (char*) item.value);
+}
+
+void (*printable_fns[])(printable) = {print_int, print_string};
+
+void print_all(int args, ...) {
+  va_list ap;
+  va_start(ap, args); // args is the name of the last fixed argument
+
+  printable item;
+
+  for (int i = 0; i < args; i++) {
+    item = va_arg(ap, printable);
+    printable_fns[item.type](item);
+  }
+
+  va_end(ap);
+}
+
+int main() {
+  int n = 3;
+  print_all(2, (printable) {INT, &n}, (printable) {STRING, "Thiago"});
+}
+```
+
+- You need to include `stdarg.h`;
+- There should always be at least one fixed argument;
+- `va_start`, `va_arg`, and `va_end` are pre-processed macros (before
+   compilation), even though they look like normal functions;
+- Random errors will happen if you try to read more arguments than
+  were passed in or read a variable with a non-matching type;
+- That's how `printf` works. It knows how many arguments to process and
+  their types by parsing the format string.
+## Common tasks
+
+### Filtering an array
+
+Filtering an array in C might be a tricky task because one has to
+decide on the best trade-off.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+const char *list[] = {"One", "Two", "Three", "Tic", "Other", "Time", "Nada"};
+
+const char** filter(const char *pattern) {
+  int len = (sizeof(list) / sizeof(list[0]));
+  int i = 0, j = 0;
+  const char **acc = malloc(len * sizeof(char*));
+
+  if (acc == NULL) {
+    puts("Failed to allocate");
+    exit(1);
+  }
+
+  for (; i < len; i++) {
+    if (strstr(list[i], pattern)) {
+      acc[j] = list[i];
+      j++;
+    }
+  }
+  acc[j] = NULL; // A smart way to avoid returning the array size
+
+  acc = realloc(acc, j * sizeof(char*));
+
+  return acc;
+}
+
+int main() {
+  const char** lst = filter("T");
+
+  for (int i = 0; lst[i] != NULL; i++) { // Iterate without knowing array size
+    puts(lst[i]);
+  }
+}
+```
+
+In this example, we allocate the full-size of the original array,
+which corresponds to the worst-case scenario. It will certainly fit
+all of the possible filtered elements. In the end, we `realloc` to
+free up unused memory. Is this good for small arrays? Probably not.
+Allocation is expensive, so we'll pay the price twice every time we
+call `filter`. Another valid option is to allocate a fixed, smaller
+quantity of memory. When the array size reaches a certain threshold,
+double it down. Do not reallocate. Here we are trading memory for
+speed. In the previous example, we trade speed for memory.
+
+Since the source array is global and is stored in the [Initialized
+Data
+Segment](https://www.hackerearth.com/pt-br/practice/notes/memory-layout-of-c-program/),
+we were able to determine its size with `(sizeof(list) /
+sizeof(list[0]))`. If we can't know its size, however, we must pass it
+to the `filter` function as an argument. Let's see how that works:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Arrays will come in as pointers, so we can't know its size.
+const char** filter(const char *list[], int len, const char *pattern) {
+  int i = 0, j = 0;
+  const char **acc = malloc(len * sizeof(char*));
+
+  if (acc == NULL) {
+    puts("Failed to allocate");
+    exit(1);
+  }
+
+  for (; i < len; i++) {
+    if (strstr(list[i], pattern)) {
+      acc[j] = list[i];
+      j++;
+    }
+  }
+  acc[j] = NULL;
+
+  acc = realloc(acc, j * sizeof(char*));
+
+  return acc;
+}
+
+int main() {
+  const char *list[] = {"One", "Two", "Three", "Tic", "Other", "Time", "Nada"};
+  int len = (sizeof(list) / sizeof(list[0]));
+  const char** lst = filter(list, len, "T");
+
+  for (int i = 0; lst[i] != NULL; i++) {
+    puts(lst[i]);
+  }
+}
+```
+
+What if the result array can have `NULL`s in between? We have a few options:
+
+- Return a struct from `filter` with `length` and `array`;
+- Pass an array argument with 2 slots for `filled` and `array` over to
+  `filter`.
