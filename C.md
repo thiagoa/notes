@@ -616,7 +616,9 @@ A few numeric types:
 - `float`
 - `double` (better precision and capacity)
 
-## Headers
+## Headers, Object Files, Archives, and Dynamic Linking
+
+### Headers and Object Files
 
 In C, a function definition must be declared _before_ the function
 that contains the function reference. When C doesn't know about a function
@@ -664,7 +666,7 @@ char *reverse(char *orig, char *dest) {
   `main`.
 - `#include "reverse.h"` is a relative preprocessor include. It will
 look for `reverse.h` in the current directory, while `<file.h>` will look
-for `file.h` in standard directories.
+for `file.h` in standard directories (`/usr/local/include`, `/usr/include` and so on).
 - `#include` will insert the file contents as if it had been written
 to the same source file.
 
@@ -740,6 +742,148 @@ Or purely with O files:
 $ gcc -c main.c
 $ gcc main.o reverse.o -o reverse
 ```
+
+Where to find header files? How to link them?
+
+- In a standard directory: `#include <file.h>`
+- Full pathname in include statement: `#include "/my/path/file.h"`
+- Tell the compiler where to find them: `gcc -I/my/path file.c -o file`
+- Include full path name of object files when linking: `gcc -I/my/path file.c /path/to/file1.o /path/to/file1.o -o file`
+
+### Archives
+
+Archive files are libraries that contain object files.
+
+```sh
+$ cd /usr/local/lib
+$ ar -t libcares.a
+__.SYMDEF SORTED
+libcares_la-ares__close_sockets.o
+libcares_la-ares__get_hostent.o
+libcares_la-ares__read_line.o
+libcares_la-ares__timeval.o
+libcares_la-ares_android.o
+libcares_la-ares_cancel.o
+...
+$ nm libcares.a
+
+libcares.a(libcares_la-ares__close_sockets.o):
+0000000000000000 T _ares__close_sockets
+                 U _ares__socket_close
+                 U _ares_free
+
+libcares.a(libcares_la-ares__get_hostent.o):
+                 U __DefaultRuneLocale
+                 U ___bzero
+                 U ___maskrune
+                 U ___stack_chk_fail
+                 U ___stack_chk_guard
+0000000000000000 T _ares__get_hostent
+                 U _ares__read_line
+                 U _ares_free
+                 U _ares_inet_pton
+                 U _ares_malloc
+                 U _ares_strdup
+                 U _aresx_sitoss
+                 U _aresx_uztoss
+                 U _inet_addr
+
+...
+```
+
+- `ar -t` to list the objects of an archive
+- `nm` to detail the contents
+- Among other files, this archive contains
+  `libcares_la-ares__close_sockets.o` and
+  `libcares_la-ares__get_hostent.o`;
+- `ares__close_sockets` is a functio within
+  `libcares_la-ares__close_sockets.o`. Anything prefixed with `T _` is
+  a function.
+- An archive file must be prefixed with `lib` because they are static
+libraries;
+- To extract a single object: `ar -x libcares.a libcares_la-ares__close_sockets.o`
+
+To create a new archive we can do:
+
+```sh
+# -r: Update the file if it already exists
+# -c: Create the archive silently
+# -s: Create an index at the start of the .a file
+$ ar -rcs libmyarchive.a file1.o file2.o
+```
+
+- Put the `.a` file in a standard directory like `/usr/local/lib` and `/usr/lib`
+- Put it in your own library directory
+
+To compile a file and link it statically to the archive:
+
+```sh
+$ gcc file.c -lmyarchive -o file
+```
+
+- `-lmyarchive` will look for libmyarchive.a
+- Set several `-l` options if necessary
+- Specify archive search directories with `-L`: `-L/my_dir`. Should
+  appear after the source files.
+- Pair it with an `-I` option if headers are not in standard directories
+
+A common example:
+
+```sh
+$ gcc file.c -I. -L. -lmyarchive -o file
+```
+
+### Building a statically linked program from parts
+
+Example:
+
+```c
+# -c: create the object file but don't link it
+$ gcc -I./includes -c lib.c -o lib.o
+$ gcc -I./includes -c exec.c -o exec.o
+$ ar -rcs ./libs/libmyarchive.a lib1.o
+$ gcc exec.o -L./libs -lhfmyarchive -o exec
+$ ./exec
+```
+
+### Dynamic linking
+
+- An archive file is built from several `.o` files;
+- A dynamic library has `.o` files linked together into a single
+  object;
+- Linking to dynamic library happens at runtime
+- The dynamic library contains extra information needed for linking
+
+```c
+$ gcc -I/includes -fPIC -c mylib.c -o mylib.o
+$ gcc -shared mylib.o -o libs/libmylib.so
+$ gcc -I./include -c exec.c -o exec.o
+$ gcc exec.o -L./libs -lmylib -o exec
+```
+
+- `-fPIC` is unnecessary on most systems. It tells `gcc` to create
+  position-independent code in order for the OS to decide at runtime
+  where they want to load it into memory;
+- The command with `-shared` asks the OS to convert the object into a
+  dynamic library;
+- Dynamic library extensions change depending on platform:
+    - Linux: `libmylib.so`
+    - Mac: `libmylib.dylib`
+    - Windows: `mylib.dll`
+- You can't rename a dynamic library file because the library name is
+recorded into the dynamic library itself;
+- From half onward, there are basically the same commands as static
+  linking with archive files, but it will work differently because the
+  `lib` file is not an archive; it is a dynamic library;
+- The library code won't be stored in the executable file.
+- On the Mac, the full path to `/libs/libmylib.dylib` will be stored
+in the executable file;
+- On Linux, the executable file will hold just `libmylib.so`, so it
+needs to be in standard `lib` directories. An alternative is to use
+the `LD_LIBRARY_PATH` env variable.
+
+The advantage of dynamic linking is that you can link to different
+libraries at runtime, as long as they follow the same interface.
 
 ## Structs, Unions, and Enums
 
@@ -1853,15 +1997,15 @@ const char** filter(const char *pattern) {
 }
 
 int main() {
-  const char** lst = filter("T");
+  const char** filtered = filter("T");
 
-  for (int i = 0; lst[i] != NULL; i++) { // Iterate without knowing array size
-    puts(lst[i]);
+  for (int i = 0; filtered[i] != NULL; i++) { // Iterate without knowing array size
+    puts(filtered[i]);
   }
 }
 ```
 
-In this example, we allocate the full-size of the original array,
+In this example, we allocate the full size of the original array,
 which corresponds to the worst-case scenario. It will certainly fit
 all of the possible filtered elements. In the end, we `realloc` to
 free up unused memory. Is this good for small arrays? Probably not.
