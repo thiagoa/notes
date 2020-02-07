@@ -1959,6 +1959,153 @@ int main() {
   were passed in or read a variable with a non-matching type;
 - That's how `printf` works. It knows how many arguments to process and
   their types by parsing the format string.
+
+## System calls
+
+### system
+
+Here's a program that's not very useful:
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+void fail(char *message) {
+  fprintf(stderr, "%s\n", message);
+  exit(1);
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fail("Needs at least two arguments");
+  }
+
+  char *prefix = argv[1];
+  char *file = argv[2];
+  char command[120];
+  short result;
+
+  // Remember: sprintf is C's string concatenation
+  sprintf(command, "grep -r '%s_%s' .", prefix, file);
+
+  result = system(command);
+
+  if (result == -1) {
+    puts("The system call has failed");
+  }
+  else if (result > 0) {
+    fail("The command has failed to find matches");
+  }
+}
+```
+
+It has many flaws:
+
+- It's susceptible to command injection
+- It doesn't escape the input strings, so it might not work with input
+  strings containing quotes
+- No way to set instance variables
+
+### exec
+
+The `exec` function replaces the current process, which remains with
+the same pid after the replacement. It also escapes the input
+arguments, which must be split as separate arguments.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+void fail(char *message) {
+  fprintf(stderr, "%s\n", message);
+  exit(1);
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fail("Needs at least two arguments");
+  }
+
+  char pattern[120];
+
+  sprintf(pattern, "%s_%s", argv[1], argv[2]);
+
+  // The name of the program needs to appear in the first and second arguments
+  execl("/usr/bin/grep", "/usr/bin/grep", "-r", pattern, ".", NULL);
+
+  // Gets to this line when the system call fails
+  // errno is a global variable with the last error.
+  // With no NULL closing the argument list, the error would be "Bad address"
+  fail(strerror(errno));
+}
+```
+
+`errno` returns an integer and `strerror` translates the error code into
+a readable string. There are many possible errors, like `EPERM=1`,
+`ENOENT=2` (no such file or directory), `ESRCH=3`, etc.
+
+Now, what happens when there is no `NULL` argument to terminate the
+argument list? The system call will fail. And [why do we pass the
+program name
+twice?](https://unix.stackexchange.com/questions/187666/why-do-we-have-to-pass-the-file-name-twice-in-exec-functions)
+Because the second argument is the `argv[0]` that's passed down to the
+executed program. For `grep`, `"bananas"` would also work as that
+argument because `grep` doesn't care about `argv[0]`. If the second
+argument is `NULL`, however, strange things will happen...
+
+`exec` functions have a return value that can be checked, which is
+useful especially when paired with `fork`. When the syscall fails, the
+return value is `-1`.
+
+There is also a version of `exec` that takes a vector for convenience.
+In Lisp, one would use a single function for `exec` and circumvent the
+limitation with `apply`.
+
+```c
+  char pattern[120];
+  sprintf(pattern, "%s_%s", argv[1], argv[2]);
+  char *args[] = {"/usr/bin/grep", "-r", pattern, ".", NULL};
+
+  execv("/usr/bin/grep", args);
+  fail("System call failed");
+```
+
+The family of functions is:
+
+- `execl` - Takes a list of arguments.
+
+        execl("/path/to/program", "/program", "opt1", "opt2", NULL);
+
+- `execlp` - Takes a list of arguments and has path search
+
+        execlp("program", "program", "opt1", "opt2", NULL);
+
+- `execle` - Takes a list of arguments and environment variables (NULL
+  terminated array of strings)
+
+        execle("/path/to/program", "program", "opt1", "opt2", NULL, env_vars);
+
+- `execv` - Takes a vector of arguments.
+
+        execv("/path/to/program", args);
+
+- `execve` - Takes a vector of arguments and environment variables
+
+        execve("/path/to/program", args, env_vars);
+
+- `execvp` - Takes a vector of arguments and has path search
+
+        execvp("program", args);
+
+- `execvpe` - Takes a vector of arguments and environment variables,
+  and has path search
+
+        execvp("program", args, env_vars);
+
 ## Common tasks
 
 ### Filtering an array
@@ -2066,3 +2213,48 @@ What if the result array can have `NULL`s in between? We have a few options:
 - Return a struct from `filter` with `length` and `array`;
 - Pass an array argument with 2 slots for `filled` and `array` over to
   `filter`.
+
+
+### Getting the current time
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// The first time I read this function I was surprised that we didn't
+// have to allocate the return string. The answer is down below.
+char* now() {
+  time_t ts; // time_t is a long (depending on platform) that stores a
+             // timestamp.
+
+  time(&ts); // Records the timestamp to the time_t pointer.
+
+  struct tm *t = localtime(&ts); // Converts from timestamp to
+                                 // calendar time, returning a pointer
+                                 // to a tm struct. The tm struct has
+                                 // fields such as t->tm_hour, etc.
+
+  return asctime(t); // Converts calendar time to textual
+                     // representation
+}
+
+int main() {
+  char *curtime1 = now();
+
+  printf("The current time is: %s\n", curtime1);
+
+  system("sleep 2");
+
+  char *curtime2 = now();
+
+  // WAT? curtime1 should be two seconds behind, but it's equal to
+  // curtime2. What's going on? The answer is in asctime's docs:
+  //
+  // Return value - "pointer to a **static** null-terminated character
+  // string holding the textual representation of date and time as
+  // described above"
+  printf("2 seconds later, the current time is: %s\n", curtime2);
+  printf("Let's print the time two seconds before: %s\n", curtime1);
+}
+```
