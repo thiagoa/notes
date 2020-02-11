@@ -1964,7 +1964,8 @@ int main() {
 
 ### system
 
-Here's a program that's not very useful:
+System runs a program in a separate process. Here's a program that's
+not very useful:
 
 
 ```c
@@ -2105,6 +2106,74 @@ The family of functions is:
   and has path search
 
         execvp("program", args, env_vars);
+
+## fork + exec
+
+Let's illustrate fork + exec with a super stupid and nonsense program:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+#define ARRAY_SIZE(a)                               \
+  (sizeof(a) / sizeof(a[0]))
+
+char *folders[] = {"/usr/local/include", "/etc"};
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fprintf(stderr, "Needs at least 2 arguments\n");
+    exit(1);
+  }
+
+  char pattern[120];
+  sprintf(pattern, "%s_%s", argv[1], argv[2]);
+
+  for (size_t i = 0; i <= ARRAY_SIZE(folders); i++) {
+    // Different OSes use different kinds of integers to store pids
+    pid_t pid = fork();
+
+    if (pid == -1) {
+      fprintf(stderr, "Can't fork: %s\n", strerror(errno));
+      return 1;
+    }
+
+    if (pid == 0) { // pid == 0 means it's the child... > 0 means it's the parent
+      if (execl("/usr/bin/grep", "/usr/bin/grep", "-r", pattern, folders[i], NULL) == -1) {
+        fprintf(stderr, "Can't run: %s\n", strerror(errno));
+        return 1;
+      }
+    }
+  }
+}
+```
+
+- Fork uses copy-on-write on Linux
+- The processes run at the same time
+- Output from both processes will be mixed up, but each string will be
+printed completely.
+- The parent will exit before the children finish. Needs `wait` (we'll
+  see it afterward.)
+
+## Pointer arithmetic
+
+TODO:
+
+
+```c
+  ll_node *nodes[] = {
+    find_node(one, "Three", find_by_contents),
+    find_node(one, &search_pos, find_by_position),
+    find_node(one, two, find_by_node)
+  };
+
+  ll_node **ptr = nodes;
+
+  puts((*(ptr + 0))->contents);
+```
 
 ## Common tasks
 
