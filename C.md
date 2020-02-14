@@ -2156,7 +2156,163 @@ int main(int argc, char *argv[]) {
 - Output from both processes will be mixed up, but each string will be
 printed completely.
 - The parent will exit before the children finish. Needs `wait` (we'll
-  see it afterward.)
+see it afterward.)
+
+## Interprocess communication
+
+- A file descriptor is a number that represents a data stream;
+- The process stores file descriptors in a table with slots ranging
+  from 0 to 255. The number of slots is configurable;
+- FD are not necessarily files; they are generally data streams;
+- The first three slots are always the same: 0 `stdin`, 1 `stdout`, 2
+`stderr`. Hence:
+
+        foo 2> error.log
+        foo 1> output.txt
+        foo 2>&1
+
+- A file descriptor is an integer;
+- Get a file descriptor with `fileno`:
+
+        FILE *my_file = fopen("errors.log", "r");
+        int descriptor = fileno(my_file);
+
+- `fileno` doesn't return -1 on error;
+- Use `dup2` to duplicate data streams, for example: `dup2(4, 3)`. If
+`4` is an open file, then `stderr` will now point at that file.
+
+Here's an example of all that:
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+#define ARRAY_SIZE(a)                               \
+  (sizeof(a) / sizeof(a[0]))
+
+char *folders[] = {"/usr/local/include", "/etc"};
+
+void error(char* message) {
+  fprintf(stderr, "%s: %s\n", message, strerror(errno));
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fprintf(stderr, "Needs at least 2 arguments\n");
+    exit(1);
+  }
+
+  FILE *f = fopen("output.txt", "w");
+  char pattern[120];
+  sprintf(pattern, "%s_%s", argv[1], argv[2]);
+
+  for (size_t i = 0; i <= ARRAY_SIZE(folders); i++) {
+    pid_t pid = fork();
+
+    if (pid == -1) {
+      error("Can't fork process");
+    }
+
+    if (pid == 0) {
+      if (dup2(fileno(f), fileno(stdout)) == -1) { // Redirects output to file. 1 instead of fileno(stdout) also works
+        error("Can't redirect to stdout");
+      }
+
+      if (execl("/usr/bin/grep", "/usr/bin/grep", "-r", pattern, folders[i], NULL) == -1) {
+        error("Can't run program");
+      }
+    }
+  }
+}
+```
+
+It might happen that `output.txt` won't get any lines because the
+parent process exited before the child had a chance to record the
+output. The parent can `wait` for the child processes in order to
+circumvent that.
+
+```
+waitpid(pid, &pid_status, options);
+```
+
+- `waitpid` is able to wait for _any_ processses.
+- `pid_status` stores exit information about the process.
+- `pid_status` contains several pieces of information. The first 8
+  bits represent exit status, which can be read by the `WEXITSTATUS`
+  macro. `WIFSIGNALED(pid_staus)` returns `0` if a process ended
+  naturally or `1` if it was killed.
+- There are several possible `options` (`man waitpid`). `0`, for
+  instance, tells `waitpid` to wait until the process finishes.
+
+Here's an example:
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/wait.h> // This header is not necessary in macOS
+
+#define ARRAY_SIZE(a)                               \
+  (sizeof(a) / sizeof(a[0]))
+
+char *folders[] = {"a", "b"};
+
+void error(char* message) {
+  fprintf(stderr, "%s: %s\n", message, strerror(errno));
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fprintf(stderr, "Needs at least 2 arguments\n");
+    exit(1);
+  }
+
+  pid_t pids[ARRAY_SIZE(folders)]; // Array to store the pids
+  FILE *f = fopen("output.txt", "w");
+  char pattern[120];
+  sprintf(pattern, "%s_%s", argv[1], argv[2]);
+
+  for (size_t i = 0; i <= ARRAY_SIZE(folders); i++) {
+    pids[i] = fork(); // Store each pid
+
+    if (pids[i] == -1) {
+      error("Can't fork process");
+    }
+
+    if (pids[i] == 0) {
+      if (dup2(fileno(f), fileno(stdout)) == -1) {
+        error("Can't redirect to stdout");
+      }
+
+      if (execl("/usr/bin/grep", "/usr/bin/grep", "-r", pattern, folders[i], NULL) == -1) {
+        error("Can't run program");
+      }
+    }
+  }
+
+  // At this point, processes are running in parallel
+
+  int pid_status;
+
+  for (size_t i = 0; i < ARRAY_SIZE(pids); i++) {
+    if (waitpid(pids[i], &pid_status, 0) == -1) { // Wait for each child to exit
+      error("Error waiting for child process");
+    }
+
+    if (WEXITSTATUS(pid_status)) {
+      puts("Error status was non 0");
+    }
+  }
+}
+```
+
 
 ## Pointer arithmetic
 
