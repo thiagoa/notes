@@ -347,3 +347,248 @@ data to plow through, so it might take twice as long to finish.
 ## Indexes
 
 See [this link](https://gist.github.com/thiagoa/cfd5f6e95ee48e222e9f).
+
+### Btree
+
+Comprised of a sorted, balanced search-tree + a sorted, doubly linked
+list of leaf nodes;
+
+Leaf nodes:
+
+- Each leaf node is stored in a block or page, the DB's smallest
+storage unit.
+- All blocks are of the same size
+- The DB stores as many index entries as possible in each block.
+- The doubly linked list enables the DB to read the index forward or
+  backward;
+- Each index entry consists of the indexed columns + the row id.
+- The index is sorted, while table data is stored in a heap structure
+  and not sorted at all. There is no physical relationship between the
+  rows stored in the same block, nor between the blocks themselves.
+
+Balanced search tree:
+
+- The root node and branch nodes support quick searching among the
+  leaf nodes;
+- Each branch node entry has an edge to the biggest value in the
+respective leaf node.
+- Root nodes follow the same logic as leaf nodes.
+
+Example: Searching for 57.
+
+
+```
+                           Btree sample
+
+
+A root node              ... 39-83 98 ...                Path: 39, 83 / 83 is bigger than 57 so traverse the edge
+                                /
+                               /
+                              /
+                             /
+A branch node          ... 46-53-57 83 ...               Path: 46, 53, 57 / 57 is equal to 57 so traverse the edge
+                              /   \
+                             /     \
+                            /       \
+                           /         \
+                          /           \
+2 leaf nodes    ... <-> 46 53 53 <-> 55-*57* 57 <-> ...  Path: 55, 57 - Follow the leaf node chain until finding 57.
+                                                                        A bigger value means not found.
+```
+
+- The tree balance allows accessing all elements with the same number
+of steps;
+- Real world indexes with millions of records have a tree depth of 4 or 5.
+
+The tree has logarithmic growth:
+
+| Op                      | Branch node entries | Tree Depth | Index Entries |
+|-------------------------|---------------------|------------|---------------|
+| log(64,   base: 4) == 3 | 4                   | 3          | 64            |
+| log(256 , base: 4) == 4 | 4                   | 4          | 256           |
+| log(1024, base: 4) == 5 | 4                   | 5          | 1024          |
+| ...                     | ...                 | ...        | ...           |
+
+## Concatenated index
+
+- Access column: Used to traverse the index;
+- Filter column: Used as a filter along with the access column;
+- Given a B-tree structure, the column order of a concatenated index
+  is obviously important;
+- The first column is the primary sort criteria and the second column
+  can be used an additional access column _only if two or more
+  secondary entries are associated with the same primary entry_.
+  Otherwise, the second column would be a filter column.
+- Index order is the same as ORDER BY over two or more columns,
+  therefore you can fetch a sample of the index with the following
+  query:
+
+        SELECT <INDEX COLUMN LIST> FROM <TABLE>
+        ORDER BY <INDEX COLUMN LIST> LIMIT 100
+
+- A concatenated index should be useful for as many queries as
+possible. Example, given two columns: `partner_id` and `partner_type`,
+which index is better?
+
+        SELECT * FROM payouts WHERE partner_id BETWEEN 1 AND 100 AND partner_type = 'Vendor'
+
+        1. CREATE UNIQUE INDEX idx_partners ON payouts(partner_id, partner_type)
+        2. CREATE UNIQUE INDEX idx_partners ON payouts(partner_type, partner_id)
+
+    - 1 would use `partner_id` as *access* and `partner_type` as
+*filter*. What if 1 processes 1000 rows because there are 10 partner
+types? Performance would suffer with random access;
+    - 2, on the other hand, would use both `partner_type` and
+`partner_id` as *access*. It would go straight to the `Vendor` partner
+type, where the IDs would already be sorted. It would process about
+100 records or less.
+    - 2 allows "access" search by two criterias: `partner_type`, and
+`partner_type + partner_id`. This is good, since `partner_id` alone is
+not a useful filter while `partner_type` is.
+
+## Slow indexes
+
+- A slow index lookup will almost always follow the leaf node chain
+indefinitely, especially if there are repeated values.
+- Accessing the table to retrieve a row means "random access", which
+is slow with a high number of entries.
+- UNIQUE INDEX SCAN: Performs tree traversal without following the
+  leaf node chain because there is a maximum of one match in the leaf
+  nodes.
+- INDEX RANGE SCAN: Performs tree traversal with following the leaf
+node chain. Can potentially read a large portion of the index.
+- Full table scan is sometimes more efficient.
+
+Given this query over a concatenated index on `subsidiary_id,
+employee_id`:
+
+```sql
+SELECT first_name, last_name, subsidiary_id, phone_number
+    FROM employees
+   WHERE last_name  = 'SILVA'
+     AND subsidiary_id = 30;
+
+------------------------------------------------------------------
+| Id | Operation                   | Name         | Rows | Cost  |
+------------------------------------------------------------------
+|  0 | SELECT STATEMENT            |              |    1  |  30  |
+| *1 | TABLE ACCESS BY INDEX ROWID | EMPLOYEES    |    1  |  30  |
+| *2 | INDEX RANGE SCAN            | EMPLOYEES_PK |   40  |   2  |
+------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+  ---------------------------------------------------
+    1 - filter("LAST_NAME"='WINAND')
+    2 - access("SUBSIDIARY_ID"=30)
+```
+
+This subsidiary returns many records, and the query is slow even
+though it matches only 1 row. The reason is:
+
+- INDEX RANGE SCAN: Traverses the tree and follows the leaf node
+chain. The result is a list of row ids.
+- TABLE ACCESS BY INDEX ROWID: Fetches the rows one by one and applies
+the `last_name` filter.
+
+Wide index range scans followed by table access are usually slow; full
+table scans might be faster because they are able to read large parts
+of the table in one shot. Data distribution is an important criteria
+for the optimizer, but in this example the optimizer hasn't been able
+to choose the best plan because statistics were outdated after growing
+the table (note the unrealistically low cost of 30). Given proper
+statistics, the optimizer will prefer a full table scan. The lowest
+cost wins.
+
+The best solution to speed up this query is to create an index on
+`last_name`.
+
+## Function-based indexes (FBI or functional indexes)
+
+Using functions on the left-hand side of a WHERE clause argument is
+dangerous and might imply full table scan.
+
+```sql
+SELECT first_name FROM vendors WHERE UPPER(last_name) = UPPER('thiago');
+```
+
+> MySQL's default collation doesn't distinguish between upper and
+> lower case letters.
+
+Compile-time evaluation: The DB replaces the result of deterministic
+functions (constant expressions) during compile-time. The execution
+plan for the above query would therefore show:
+`filter(UPPER("LAST_NAME")='THIAGO')`.
+
+In Postgres and Oracle, we can create functional indexes:
+
+```sql
+CREATE INDEX idx_vendor_up_last_name ON vendors (UPPER(last_name));
+```
+
+Now instead of a full table scan, we would have an index range scan
+traversing the B-tree and following the leaf node chain.
+
+Note that statistics might not get updated right after creating an
+index, so you might get suboptimal execution plans with a higher or
+lower number of processed rows for each operation executed by the
+query. [In Postgres, we would have to wait for autovacuum or kick off
+a manual
+analyze](https://blog.dbi-services.com/are-statistics-immediately-available-after-creating-a-table-or-an-index-in-postgresql/).
+
+Some databases (i.e., SQL server) do not support FBI, but do support
+computed columns and indexes on the computed columns.
+
+```sql
+ALTER TABLE vendors
+  ADD COLUMN up_last_name varchar(255)
+  GENERATED ALWAYS AS (UPPER(last_name)) STORED;
+
+CREATE INDEX idx_vendor_up_last_name on vendors(up_last_name);
+```
+
+Function-based indexes shouldn't be based upon non-deterministic
+functions, i.e., the ones depending on current time, random numbers,
+etc.
+
+In PostgreSQL, the function or expression used to create FBIs needs to
+be IMMUTABLE, i.e., the function is guaranteed to return the same
+result given the same arguments. The IMMUTABLE keyword gives the
+function a trust sign for FBIs. However, it is possible that a
+non-deterministic function still be declared IMMUTABLE.
+
+Given this limitation, how to index a query by people's age? Re: Index
+the date field then perform the calculation of the target date on the
+right-hand side of the WHERE clause argument.
+
+## Parameterized queries
+
+Benefits:
+
+1. Prevent SQL injection
+2. Reuse of the same execution plan
+
+Item 2, however, is a double-edged sword. Bind parameters are not
+visible to the optimizer, so it can't rely on the histogram
+(distribution of data) to determine the best execution plan for each
+dataset. It assumes an equal distribution and always gets the same row
+count estimates and cost values (i.e., assuming the same number of
+distinct values and dividing it by the number of rows in the table).
+
+So, is the cost of generating and evaluating execution plans higher
+than the cost of possible performance variations due to unequal
+distribution of data? Maybe it is, maybe not. Database vendors try to
+solve this dilemma with heuristic methods—but with very limited
+success.
+
+> When in doubt, use bind parameters.
+
+Cursor Sharing and Auto Parameterization: SQL server and Oracle can
+enforce parameterization of queries automatically, which are
+workarounds for applications that do not use bind parameters at all.
+
+## Types of optimizers
+
+- Cost-based optimizer: Uses statistics about tables, columns,
+  indexes, histogram (data distribution), etc, to compare the cost of
+  different plans.
+- Rule-based optimizer: rare nowadays.
