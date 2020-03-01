@@ -2321,8 +2321,9 @@ int main(int argc, char *argv[]) {
 
 - Pipes are not files, they are stored in memory. But it's possible to
 create file-based pipes called FIFO pipes (see `mkfifo`).
-- Pipes are unidirectional, but you can create two pipes: one from
-  parent to child and another from child to parent.
+- Pipes are unidirectional, but you can create two pipes to overcome
+  this limitation: one from parent to child and another from child to
+  parent.
 
 The following program is equivalent to `ls -1 -F | grep
 "/$"`. It shows only directories:
@@ -2431,6 +2432,166 @@ int main() {
   }
 }
 ```
+
+### Signals
+
+- A signal is an integer value;
+- When the process receives a signal, it looks up a signal handler in
+the signal mappings table;
+- The default signal handler for the interrupt signal (`SIGINT`,
+Ctrl + c) runs `exit`;
+- Signals are not necessarily received in the same order they are
+sent. The OS might reorder them by priority;
+- If the same signal is triggered repeatedly N times, it will not
+  be necessarily received N times.
+
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+
+void sighandler(int sig) {
+  (void) sig; // Silence warnings
+  puts("Got Ctrl + c, exiting...");
+  exit(1);
+}
+
+int catch_signal(int sig, void (*handler) (int)) {
+  struct sigaction action;
+
+  action.sa_handler = handler;
+
+  // Mask to filter the signals that the sigaction will handle
+  // We are using an empty mask.
+  sigemptyset(&action.sa_mask);
+
+  // Additional flags
+  action.sa_flags = 0;
+
+  // The third parameter is the old_action (the current handler we're
+  // about to replace). If old_action is non-NULL, the previous action
+  // is saved in old_action.
+  return sigaction(sig, &action, NULL);
+}
+
+int main() {
+  if (catch_signal(SIGINT, sighandler) == -1) {
+    fprintf(stderr, "Unable to register signal");
+    exit(2);
+  }
+
+  char name[30];
+
+  printf("Enter your name: ");
+  fgets(name, 30, stdin);
+  printf("Hello %s\n", name);
+}
+```
+
+- To reset a signal, use `SIG_DFL`. For example: `catch_signal(SIGTERM, SIG_DFL)`;
+- To ignore a signal, use `SIG_IGN`. For example: `catch_signal(SIGTERM, SIG_IGN)`.
+
+Now here are some signals:
+
+| Signal   | Description                                         |
+|----------|-----------------------------------------------------|
+| SIGINT   | The process was interrupted                         |
+| SIGQUIT  | The process was stopped and a core dump generated   |
+| SIGFPE   | Floating-point error                                |
+| SIGTRAP  | The debugger asks where the process is              |
+| SIGSEGV  | Tried to access illegal memory                      |
+| SIGWINCH | The terminal window changed size                    |
+| SIGTERM  | The process was killed                              |
+| SIGPIPE  | The process wrote to a pipe with no nothing reading |
+
+And some kill commands:
+
+```sh
+$ kill 123 # SIGTERM
+$ kill -INT 123
+$ kill -SEGV 123
+$ kill -KILL 123 # Can't be ignored and can't be handled
+```
+
+To exemplify
+[alarms](https://www.gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Setting-an-Alarm.html)
+(`SIGALRM`) and signal escalation, here's a multiplication game with a
+timer of 5 seconds. The game ends when the time is up or the answer is
+wrong.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
+
+int score = 0;
+
+void end_game(int sig) {
+  (void) sig;
+  printf("\nFinal score: %i\n", score);
+  exit(0);
+}
+
+int catch_signal(int sig, void (*handler) (int)) {
+  struct sigaction action;
+
+  action.sa_handler = handler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+
+  return sigaction(sig, &action, NULL);
+}
+
+void times_up(int sig) {
+  (void) sig;
+  puts("\n\nTIME'S UP!");
+  raise(SIGINT);
+}
+
+void error(char *msg) {
+  fprintf(stderr, "%s: %s\n", msg, strerror(errno));
+  exit(1);
+}
+
+int main() {
+  catch_signal(SIGALRM, times_up);
+  catch_signal(SIGINT, end_game);
+
+  srandom(time(0));
+
+  while(1) {
+    int a = random() % 11;
+    int b = random() % 11;
+    char txt[4];
+
+    alarm(5); // The alarm is reset at each iteration
+
+    printf("What is %i times %i? ", a, b);
+
+    fgets(txt, 4, stdin);
+    int answer = atoi(txt); // Convert to integer
+
+    if (answer == a * b) {
+      score++;
+    }
+    else {
+      printf("\nWRONG!\n");
+      raise(SIGINT);
+    }
+  }
+}
+```
+
+- The alarm is created by the process' interval timer;
+- Do not use alarms with `sleep` because `sleep` uses the same
+  interval timer;
+- The default alarm behavior is to stop the process;
+- Each process has a single timer;
+- It is possible to set an alarm to less than one second with `setittimer`.
 
 ## Pointer arithmetic
 
