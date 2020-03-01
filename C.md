@@ -2160,6 +2160,8 @@ see it afterward.)
 
 ## Interprocess communication
 
+### File descriptors
+
 - A file descriptor is a number that represents a data stream;
 - The process stores file descriptors in a table with slots ranging
   from 0 to 255. The number of slots is configurable;
@@ -2177,12 +2179,11 @@ see it afterward.)
         FILE *my_file = fopen("errors.log", "r");
         int descriptor = fileno(my_file);
 
-- `fileno` doesn't return -1 on error;
+- `fileno` doesn't return `-1` on error;
 - Use `dup2` to duplicate data streams, for example: `dup2(4, 3)`. If
 `4` is an open file, then `stderr` will now point at that file.
 
 Here's an example of all that:
-
 
 ```c
 #include <stdio.h>
@@ -2218,7 +2219,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (pid == 0) {
-      if (dup2(fileno(f), fileno(stdout)) == -1) { // Redirects output to file. 1 instead of fileno(stdout) also works
+      // Redirects output to file. 1 instead of fileno(stdout) also works
+      if (dup2(fileno(f), fileno(stdout)) == -1) {
         error("Can't redirect to stdout");
       }
 
@@ -2229,6 +2231,8 @@ int main(int argc, char *argv[]) {
   }
 }
 ```
+
+### Waiting for a process
 
 It might happen that `output.txt` won't get any lines because the
 parent process exited before the child had a chance to record the
@@ -2243,7 +2247,7 @@ waitpid(pid, &pid_status, options);
 - `pid_status` stores exit information about the process.
 - `pid_status` contains several pieces of information. The first 8
   bits represent exit status, which can be read by the `WEXITSTATUS`
-  macro. `WIFSIGNALED(pid_staus)` returns `0` if a process ended
+  macro. `WIFSIGNALED(pid_status)` returns `0` if a process ended
   naturally or `1` if it was killed.
 - There are several possible `options` (`man waitpid`). `0`, for
   instance, tells `waitpid` to wait until the process finishes.
@@ -2313,6 +2317,120 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+### Pipes
+
+- Pipes are not files, they are stored in memory. But it's possible to
+create file-based pipes called FIFO pipes (see `mkfifo`).
+- Pipes are unidirectional, but you can create two pipes: one from
+  parent to child and another from child to parent.
+
+The following program is equivalent to `ls -1 -F | grep
+"/$"`. It shows only directories:
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define LEN 255
+
+void error(char* message) {
+  fprintf(stderr, "%s: %s\n", message, strerror(errno));
+}
+
+int main() {
+  int fd[2];
+
+  // Gotcha: always open the pipe BEFORE forking because both parent and
+  // child need to inherit the same file descriptors. Otherwise, nothing
+  // happens (blank output).
+  if (pipe(fd) == -1) {
+    error("Unable to create pipe");
+  }
+
+  pid_t pid = fork();
+
+  if (!pid) { // Child process
+    close(fd[0]); // Close the pipe's read end
+    dup2(fd[1], fileno(stdout)); // Redirect the pipe's write-end to stdout
+
+    if (execl("/bin/ls", "-1", "-F", NULL) == -1) {
+      error("Unable to run command");
+    }
+  }
+  else { // Parent process
+    close(fd[1]); // Close the pipe's write end
+    dup2(fd[0], fileno(stdin)); // Redirect the pipe's read-end to stdin
+
+    char line[LEN];
+
+    while (fgets(line, LEN, stdin)) {
+      if (line[strlen(line) - 2] == '/') {
+        printf("%s", line);
+      }
+    }
+  }
+}
+```
+
+When the child process dies, the pipe is closed and `fgets` gets an
+`EOF` and then returns `0`.
+
+In the next example, we open the file descriptors as file streams and
+avoid using `dup2`. However, we are no longer running an external
+program. To redirect the output of an external program, we necessarily
+need to use `dup2`.
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+#define LEN 255
+
+void error(char* message) {
+  fprintf(stderr, "%s: %s\n", message, strerror(errno));
+}
+
+int main() {
+  int fd[2];
+  pid_t pid;
+
+  if (pipe(fd) == -1) {
+    error("Unable to create pipe");
+  }
+
+  pid = fork();
+
+  if (!pid) {
+    close(fd[0]);
+
+    FILE *write_end = fdopen(fd[1], "w");
+
+    fprintf(write_end, "I will travel to the other side\n");
+    fprintf(write_end, "And I will too");
+
+    fclose(write_end);
+  }
+  else {
+    close(fd[1]);
+    dup2(fd[0], fileno(stdin));
+
+    FILE *read_end = fdopen(fd[0], "r");
+
+    char line[LEN];
+
+    // Prints the two phrases above
+    while (fgets(line, LEN, read_end)) {
+      printf("%s", line);
+    }
+
+    fclose(read_end);
+  }
+}
+```
 
 ## Pointer arithmetic
 
