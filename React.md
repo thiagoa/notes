@@ -1,5 +1,10 @@
 # React
 
+## Staging area
+
+- `create-react-app` uses
+  [`testing-library`](https://testing-library.com/docs/react-testing-library/intro)
+
 ## Basics
 
 ### HTML
