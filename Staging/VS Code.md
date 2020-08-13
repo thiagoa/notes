@@ -1,0 +1,4 @@
+- `C-b` hide sidebar
+- `C-S-f` search
+- `C-M-l` multiple cursors - select all like this
+- `C-M-down` multiple cursors - create cursor below
