@@ -1,0 +1,485 @@
+* Pagination tips                                         :postgres:readings:
+
+Link: https://momjian.us/main/blogs/pgblog/2020.html#August_10_2020
+
+There are 5 possible ways of implementing pagination in PostgreSQL:
+
+** Types
+
+*** Cursors non-WITH HOLD
+
+Open non-WITH HOLD cursor in a transaction block and fetch rows in
+pages.
+
+- The entire result set often has to be computed.
+- The transaction must be kept open, leading to long running
+  transactions and decreased cleanup efficiency.
+- Requires =idle_in_transaction_session_timeout= as good practice.
+
+*** Cursors WITH HOLD
+
+Avoids keeping a transaction but requires the entire result set to be
+stored in server memory.
+
+*** LIMIT/OFFSET
+
+The most common method.
+
+- Does not require the result set to be stored
+  in memory.
+- The article does not mention it, but OFFSET can be
+  expensive when seeking much farther.
+- Has problems displaying accurate data if the underlying results
+  change during page views: items might not appear or appear twice.
+
+*** LIMIT/OFFSET with REPEATABLE READ
+
+All page requests will use the same snapshot. Requires long-running
+transactions, so =idle_in_transaction_session_timeout= is recommended.
+
+*** Keyset pagination
+
+No comments.
+
+** Other notes
+
+One alternative to reduce the number of query requests is to fetch a
+large page range, thereby caching more results in memory.
+
+COUNT can be inefficient, so we can use the optimizer statistics
+(which might not be accurate):
+
+#+BEGIN_SRC sql
+CREATE OR REPLACE FUNCTION row_count_estimate(query TEXT) RETURNS TEXT
+AS $$
+DECLARE str TEXT;
+        row_count INTEGER;
+BEGIN
+        -- Execute SQL from SQL string. The article uses a more confusing syntax:
+        -- $a$EXPLAIN $a$
+        EXECUTE 'EXPLAIN ' || query INTO str;
+
+        -- The inner substring matches on the ' rows=[0-9]+' regex,
+        --   * Which has the number of estimated rows by the planner.
+        --   * Returns ' rows=200' for example.
+        -- The outer substring removes the " rows" prefix. Index starts at 1, not 0.
+        SELECT substring(substring(str FROM ' rows=[0-9]+') FROM 7) INTO row_count;
+        RETURN row_count;
+END;
+$$
+LANGUAGE plpgsql;
+#+END_SRC
+
+How to use:
+
+#+BEGIN_SRC sql
+-- Escape single quotes with single quotes! The inner string ends with: LIKE 'a%'
+SELECT row_count_estimate('SELECT * FROM product WHERE name LIKE ''a%''');
+#+END_SRC
+
+How to make more accurate:
+
+- Increase the frequency of statistics updates by modifying autovacuum's analyze settings.
+- If the detected row count is below a given threshold, run an
+  inexpensive =COUNT(*)= query to get an accurate count.
+
+--------------------
+
+* Keyset pagination                                       :postgres:readings:
+
+Link: https://momjian.us/main/blogs/pgblog/2020.html#August_12_2020
+
+#+BEGIN_SRC sql
+CREATE TABLE product (product_id SERIAL PRIMARY KEY, description TEXT);
+
+-- Reminder: generate_series returns a table. "AS id" would also work
+-- because there's only one column.
+INSERT INTO product
+SELECT id, 'Product ' || id::TEXT
+FROM generate_series(1, 100) AS t(id);
+#+END_SRC
+
+To get 10 items you have to fetch 11:
+
+#+BEGIN_SRC sql
+SELECT product_id, description
+FROM product
+WHERE product_id > 30
+ORDER BY product_id
+LIMIT 11;
+#+END_SRC
+
+Why? Because if it returns only 10, it's the last page. Avoids 1
+additional query to find it out. Of course, we will only display 10
+items.
+
+Paging backwards:
+
+#+BEGIN_SRC sql
+WITH page AS
+(
+        SELECT product_id, description
+        FROM product
+        WHERE product_id < 21
+        ORDER BY product_id DESC
+        LIMIT 11
+)
+SELECT product_id, description
+FROM page
+ORDER BY product_id;
+#+END_SRC
+
+Complexities:
+
+- If paginating backwards and the first page returns 11 rows (i.e.
+  someone adds a record to the first page,) you'll need to repopulate
+  the first page.
+- If paginating backwards and it returns less than 10 rows (i.e.,
+  someone deletes a record from the first page,) you'll need to
+  reissue the initial query
+
+--------------------
+
+* Don’t use double quotes in PostgreSQL                   :postgres:readings:
+
+Link: https://lerner.co.il/2013/11/30/quoting-postgresql/
+
+Strings are always represented with single quotes.
+
+Double quotes are for case sensitivity in keywords. A =people= table
+can be queried with =people=, =PEople=, =People=, etc. If you create
+the table with ="People"= it will only accept ="People"=.
+
+--------------------
+
+* A pg_stat_statements Troubleshooting 'Hack'             :postgres:readings:
+
+Link: https://postgresweekly.com/link/93240/ef08820b5c
+
+Ad-hoc monitoring.
+
+--------------------
+
+* [Just JavaScript] 06. Equality of Values              :javascript:readings:
+
+- Strict equality: a === b
+- Loose equality: a == b
+- Same Value equality: Object.is(a, b)
+
+"Strict equality" is mostly the same as "Same value equality", except
+that "Strict equality" has odd edge cases:
+
+#+BEGIN_SRC javascript
+NaN === NaN // false
+-0 === 0 // true
+
+Object.is(NaN, NaN) // true
+Object.is(-0, 0) // false
+#+END_SRC
+
+=-0= exists in floating point math [[https://softwareengineering.stackexchange.com/questions/280648/why-is-negative-zero-important/280708#280708][for practical reasons]].
+
+How to check for =NaN=:
+
+#+BEGIN_SRC javascript
+Number.isNaN(n)
+Object.is(n, NaN)
+n !== n
+#+END_SRC
+
+Why does the latter work? Because =NaN= is the only value that is not
+strict equals to itself.
+
+And of course, this is not reported in the article, but remember:
+
+#+BEGIN_SRC javascript
+[1] === [1] // false
+[1] == [1] // false
+#+END_SRC
+
+For objects, it's expected that they will always be different, but
+arrays not so much. JS equality is not so helpful in the practical
+world.
+
+Strict equals implementation without triple equals:
+
+#+BEGIN_SRC javascript
+// Like a === b
+function strictEquals(a, b) {
+  if (Object.is(a, b)) {
+    if (Object.is(a, NaN)) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+  else {
+    if (
+      (Object.is(a, 0) && Object.is(b, -0)) ||
+      (Object.is(a, -0) && Object.is(b, 0))
+    ) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+}
+#+END_SRC
+
+----------------------
+
+* 5 Elixir Tips Learned in Code Review                      :elixir:readings:
+
+Link: https://dockyard.com/blog/2020/07/27/5-elixir-tips-learned-in-code-review?utm_source=elixir-radar&utm_medium=email
+
+I agree with the following tips:
+
+** Be mindful of implicit behavior and provide flexibility where it make sense
+
+Do not execute work that is not suitable for all use cases. Provide
+flexibility in that case.
+
+** Happy path readability
+
+#+BEGIN_SRC elixir
+# Bad
+|> case do
+  {:error, reason} -> {:error, reason}
+  {:ok, %{status_code: 200}} -> {:ok, "success"}
+  {:ok, %{status_code: 400, body: body}} -> handle_error(body)
+end
+
+# Good
+|> case do
+  {:ok, %{status_code: 200}} -> {:ok, "success"}
+  {:ok, %{status_code: 400, body: body}} -> handle_error(body)
+  {:error, reason} -> {:error, reason}
+end
+#+END_SRC
+
+** Alias the module to be tested (vs. importing)
+
+#+BEGIN_SRC elixir
+# Bad
+import FunProject.ParamModule
+
+test "returns defaults when params is empty" do
+  assert %{is_default?: true} == default_params(%{})
+end
+
+# Good
+alias FunProject.ParamModule
+
+test "returns defaults when params is empty" do
+  assert %{is_default?: true} == ParamModule.default_params(%{})
+end
+#+END_SRC
+
+** 5. Alias full module name for improved global search
+
+#+BEGIN_SRC elixir
+# Bad
+alias FunProject.HTTPClient
+
+test "works" do
+  expect(HTTPClient.Mock, :request, fn -> {:ok, %{}} end)
+end
+
+# Good
+alias FunProject.HTTPClient.Mock, as: HTTPClientMock
+
+test "works" do
+  expect(HTTPClientMock, :request, fn -> {:ok, %{}} end)
+end
+#+END_SRC
+
+------------------
+
+* OTP as the Core of Your Application Part 1                :elixir:readings:
+
+Link: https://akoutmos.com/post/actor-model-genserver-app/
+
+This post is not so interesting. It:
+
+- Scraps Manning's site to get some sample books, and records it in a data file.
+- Creates a Phoenix/Ecto application
+- Seeds the data file into a =books= table with a UUID (=:binary_id=) primary key.
+
+-------------------------------
+
+* OTP as the Core of Your Application Part 2                :elixir:readings:
+
+Link: https://akoutmos.com/post/actor-model-genserver-app-two/
+
+Part 2 is more interesting than part 1. The general idea is to model
+the data for each book with a processe, which contrasts with how it
+would be done with a database-centric approach. And the conclusion is
+that it ends up being faster with 1.000 or so books (i.e., not
+always).
+
+** Create a registry
+
+To lookup pids by UUID.
+
+#+BEGIN_SRC elixir
+defmodule BookStore.BookRegistry do
+  def child_spec do
+    Registry.child_spec(
+      keys: :unique,
+      name: __MODULE__,
+      partitions: System.schedulers_online()
+    )
+  end
+
+  def lookup_book(book_id) do
+    case Registry.lookup(__MODULE__, book_id) do
+      [{book_pid, _}] ->
+        {:ok, book_pid}
+
+      [] ->
+        {:error, :not_found}
+    end
+  end
+end
+#+END_SRC
+
+The registry must be initialized with the application:
+
+#+BEGIN_SRC elixir
+def start(_type, _args) do
+  children = [
+    ...
+
+    # Start the Book Store Registry
+    BookStore.BookRegistry.child_spec(),
+
+    ...
+  ]
+
+  ...
+end
+#+END_SRC
+
+** Create a Book DynamicSupervisor
+
+#+BEGIN_SRC elixir
+defmodule BookStore.BookDynamicSupervisor do
+  use DynamicSupervisor
+
+  alias BookStore.Books.{Book, BookProcess}
+
+  def start_link(opts) do
+    DynamicSupervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
+  @impl true
+  def init(_opts) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  def add_book_to_supervisor(%Book{} = book) do
+    child_spec = %{
+      id: BookProcess,
+      start: {BookProcess, :start_link, [book]},
+      restart: :transient
+    }
+
+    {:ok, _pid} = DynamicSupervisor.start_child(__MODULE__, child_spec)
+  end
+
+  def all_book_pids do
+    __MODULE__
+    |> DynamicSupervisor.which_children()
+    |> Enum.reduce([], fn {_, book_pid, _, _}, acc ->
+      [book_pid | acc]
+    end)
+  end
+end
+#+END_SRC
+
+Also register the dynamic supervisor in =application.ex=.
+
+** The book process genserver
+
+#+BEGIN_SRC elixir
+defmodule BookStore.Books.BookProcess do
+  use GenServer, restart: :transient
+
+  require Logger
+
+  alias BookStore.Repo
+  alias BookStore.Books.Book
+  alias Ecto.Changeset
+
+  # Registers the process to be initialized with the registry
+  def start_link(%Book{} = book) do
+    GenServer.start_link(__MODULE__, book,
+      name: {:via, Registry, {BookStore.BookRegistry, book.id}}
+    )
+  end
+
+  @impl true
+  def init(%Book{} = state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_call(:read, _from, %Book{} = state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:update, attrs}, _from, %Book{} = state) do
+    state
+    |> update_book(attrs)
+    |> case do
+      {:ok, %Book{} = updated_book} ->
+        {:reply, updated_book, updated_book, {:continue, :persist_book_changes}}
+
+      error ->
+        {:reply, error, state}
+    end
+  end
+
+  @impl true
+  def handle_call(:order_copy, _from, %Book{quantity: 0} = state) do
+    {:reply, :no_copies_available, state}
+  end
+
+  @impl true
+  def handle_call(:order_copy, _from, %Book{quantity: quantity} = state) do
+    state
+    |> update_book(%{quantity: quantity - 1})
+    |> case do
+      {%Book{} = updated_book, changeset} ->
+        {:reply, :ok, updated_book, {:continue, {:persist_book_changes, changeset}}}
+
+      error ->
+        {:reply, error, state}
+    end
+  end
+
+  # Does not block the web request, and syncs with the DB later.
+  @impl true
+  def handle_continue({:persist_book_changes, changeset}, state) do
+    Repo.update(changeset)
+
+    {:noreply, state}
+  end
+
+  defp update_book(book, attrs) do
+    book
+    |> Book.changeset(attrs)
+    |> case do
+      %Changeset{valid?: true} = changeset ->
+        updated_book = Changeset.apply_changes(changeset)
+        {updated_book, changeset}
+
+      error_changeset ->
+        {:error, error_changeset}
+    end
+  end
+end
+#+END_SRC
