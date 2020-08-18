@@ -1,0 +1,188 @@
+* Domain Driven Design
+
+** Repositories
+
+*** Intro
+
+- There is no need for all objects to be interconnected or
+  traversable, which would potentially make the web of objects
+  unmanageable
+- Reconstitution: creation of an instance from stored data
+- Don't forget the focus on the model; it's easy to forget it when
+  you're thinking about technical mechanisms to deal with queries in
+  the infrastructure layer
+- It's easy to take a shortcut and pull specific objects from the DB,
+  rather than navigating from the aggregate root to obtain a certain
+  relationship: *any object internal to an aggregate is prohibited
+  from access except by traversal from the root*
+- If you don't use a framework, the technical complexity of applying
+  DB access infrastructure quickly swamps the client code, which leads
+  devs to dumb down the domain layer, which makes the model
+  irrelevant. Entities and value objects run the risk of becoming mere
+  data containers
+- No need to worry about transients like value objects. They might be
+  convenient to find by traversal (example, `person#address`) as long
+  as aggregate rules are followed
+
+A subset of persistent objects corresponding to the roots of
+aggregates (which are not convenient to reach by traversal) must be
+globally accessible through a search based on object attributes.
+
+Free database queries can breach the encapsulation of domain objects
+and aggregates. Exposure of technical infrastructure and database
+access mechanisms complicates the client and obscures model-driven
+design.
+
+Techniques for dealing with DB access:
+
+- Encapsulating SQL into query objects
+- Metadata mapping layers (Fowler 2003)
+- Factories can help reconstitute stored objects
+
+The repository pattern brings back model focus.
+
+*** What is it?
+
+- Represents all objects of a certain type as a conceptual set
+- Acts like a collection with more elaborate querying capability
+- Allows the client to ask what it needs in terms of the model
+- Adds or removes records, corresponding to INSERTs or DELETEs for SQL DBs.
+- Clients request objects from the repo using query methods
+- The repo encapsulates the machinery of database queries and metadata mapping
+- They can also return summary information such as counts
+- Repos can interface internally with other repos, query objects, etc.
+  Question: does classic DDD allow the use of query objects outside
+  the context of a repo?
+
+For each type of object that needs global access, create an object
+that can provide the illusion of an in-memory collection of all
+objects of that type. Setup access through a well-known global
+interface. Provide repos only for aggregate roots that need direct
+access.
+
+Advantages:
+
+- Provide a simple model for obtaining persistent objects and managing their life cycle
+- Decouple application and domain design from persistent technology
+- Communicate design decisions about object access
+- Allow easy stubbing, typically with in-memory collections
+
+*** Querying a repository
+
+- The easiest repository has hard-coded queries with specific
+  parameters, which may include counts and aggregations
+- A repository framework allows more flexible queries
+- Specification-based queries: a specification describes a criteria
+  without concern for how it will be obtained.
+
+#+BEGIN_SRC ruby
+criteria = Criteria.new(security: 'WCOM', account: '123)
+#+END_SRC
+
+#+BEGIN_VERSE
+client => TradeOrderRepository => query (SQL string) => local/reconstitute (factories)
+#+END_VERSE
+
+- More information about implementing specification-based queries in
+  Fowler 2003, by Rob Mee and Edward Hieatt
+- Even a repository design with flexbile queries should allow for the
+  addition of specialized hardcoded queries
+
+*** Developers should be aware of the underlying repo implementation
+
+But client code should not; implementation details are hidden behind
+the interface. Common problems:
+
+- Instantiating too many objects (bringing a large part of the
+  database into memory)
+- The repository call translates into degraded and non-scalable query
+  performance
+
+*** Implementing a repository
+
+Hide all the inner workings from the client (but not the developer).
+The repo delegates to infrastructure services. Typically, teams add a
+framework to the infrastructure layer to support the implementation of
+repositories. The superclass or "base" class might implement some
+basic queries, which in Java implies an =Object= return type and the
+client would cast it to the appropriate collection type.
+
+Concerns to keep in mind:
+
+- Abstract the type: No need to have a repository for each class. The
+  type can be an interface, an abstract superclass, a hierarchy, a
+  specific concrete class, etc. The DB technology may impose
+  constraints on this.
+
+- Decoupling: more freedom to change the implementation; allows
+  optimizing performance or making testing easier with in-memory
+  implementations.
+
+- Leave transaction control to the client: Repo code should not be
+  concerned with transactions, which should be handled by clients.
+
+Query object is a supporting technical pattern for repositories.
+
+*** Working within your frameworks
+
+Don't fight your frameworks. Seek ways to keep the fundamentals of DDD
+and let go of the specifics when the framework is antagonistic. Look
+for affinities between the concepts of DDD and the concepts in the
+framework.
+
+*** Factories
+
+When working with non-object databases, the data must be reconstituted
+into object form.
+
+Factories and repositories have distinct responsibilities:
+
+- The factory makes new objects
+- The repository finds old objects: the client should be given the
+  illusion that the objects are in memory. Even if a new instance of
+  an existing object is created, it is the same conceptual object in
+  the middle of its life cycle.
+
+These two views can be reconciled by making the repository delegate
+object creation to a factory, which could also be used to create
+objects from scratch (seldom in practice):
+
+#+BEGIN_VERSE
+client -> repository -> factory
+              |
+           database
+#+END_VERSE
+
+New objects are added to the repository if they are passed to
+=Repo.insert=.
+
+*** Designing objects for relational databases
+
+The mismatch between objects and relational tables can have a
+significant impact on the object model. The relational table design
+does not have to reflect the domain model. Mapping tools are
+sophisticated enough to bridge significant differences, but these
+differences are complicated to maintain in practice. What can we
+sacrifice to make the mappings simpler? The richness of the object
+model? The database design (such as selective denormalization)? It is
+crucial that the mappings be transparent and easily understandable by
+inspecting the code or reading entries in the mapping tool.
+
+Processes outside the object system should not access the object store
+because they could violate the invariant enforced by the objects.
+
+There are many cases in which the data comes from a legacy or external
+system that was never intended as a store of objects, in which case
+there are two domain models coexisting. Which model will you conform
+to?
+
+Strive to keep the mappings simple.
+
+- A table row should contain an object
+- A FK should translate to a reference to another entity.
+
+The ubiquitous language is important: objects should correspond to
+those of the relational tables.
+
+There are also reasons to go with a schema that is distinct from the
+object model, but it must be chosen conciously.
