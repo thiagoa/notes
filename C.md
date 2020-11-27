@@ -110,8 +110,9 @@ It errors, so it should be avoided.
 
 ### scanf
 
-`scanf(format_string, ...)` - The format string captures the length of
-the string NOT including the null terminator.
+`scanf(format_string, ...)` - The `N` from `"%Ns"` captures the full
+length of a string NOT including the null terminator (i.e., `%21s` is
+good for a string of size 22).
 
 ```c
 #include <stdio.h>
@@ -131,6 +132,96 @@ int main() {
   puts(thing2);
 }
 ```
+
+If the format string does not end with whitespace (which is the right
+way to go), `scanf` will NOT consume the trailing newline from stdin.
+Therefore, a subsequent `fgets` asking for more input would
+immediately consume the newline leftover, which actually works as a
+stop sign for both `fgets` and `scanf`:
+
+```c
+int i;
+char j[30];
+
+scanf("%d", &i);
+fgets(j, 30, stdin); // Skipped.. Reads \n leftover and bails out
+```
+
+Some ways to solve this problem:
+
+```c
+scanf("%d\n", &i); // 1. Add a newline to the format string (WARNING - Bad idea)
+scanf("%d ", &i); // 2. Add a trailing space to the format string (WARNING - Bad idea)
+
+scanf("%d", &i);
+getchar(); // 3. Call getchar() to consume the newline (Good idea)
+```
+
+However, 1 and 2 are a bad idea. Let's see what happens:
+
+```c
+  // The same also applies for 2
+  int i;
+  char k[30];
+
+  scanf("%d\n", &i);
+  printf("scanf finished\n");
+  fgets(k, 30, stdin);
+  printf("fgets finished\n");
+
+  printf("i is %d\n", i);
+  printf("k is %s\n", k);
+```
+
+Prints:
+
+```
+1
+Thiago
+scanf finished
+fgets finished
+i is 1
+k is Thiago
+```
+
+`\n` is a stop sign for `scanf`. `\n` at the end of a format string
+will instruct `scanf` to ignore the stop sign (to be more precise, to
+advance to the next non-whitespace character, thus ignoring the stop
+sign). `scanf` will then read up until the second `\n`, which it
+considers to be the stop sign (the one from `Thiago\n`) and then leave
+`Thiago\n` in the input buffer because it doesn't match the format
+string. `fgets` will then capture `Thiago\n` (correctly, in this
+specific case) because it remains in the input buffer. That might
+might be dangerous with more complex format strings given `scanf`'s
+quirkiness and unreliability for user input.
+
+Option 3, however, prints correctly:
+
+```
+1
+scanf finished
+Thiago
+fgets finished
+i is 1
+k is Thiago
+```
+
+## Collecting user input
+
+When dealing with *user* input:
+
+- Prefer collecting everything as strings
+- Use conversion functions to convert to the appropriate types.
+
+Validating `scanf` variables is a tricky endeavour because it will
+stop collecting values for the variables at the first non-matching
+character (keep in mind it ignores whitespace characters). Using
+`fgets` + conversion functions is usually a much better idea.
+
+However, there are cases where `scanf` + validation is better.
+
+For reading binary files with a strict format, though, `fscanf` might
+do a better job.
 
 ## Operators
 
