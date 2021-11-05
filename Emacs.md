@@ -840,3 +840,7 @@ Compilation:
 (let ((default-directory "/Users/thiagoaraujo/Code/stack/stack-development/stack-api"))
       (compile "bundle exec rspec" 'rspec-compilation-mode))
 ```
+
+### Inserting a code block in org mode
+
+`C-c C-,`
