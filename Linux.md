@@ -66,3 +66,12 @@ Check the following options:
 - What to show in top bar: Both
 - History Size: 500
 - Remove down arrow in top bar
+
+### Fixing Ulauncher extensions
+
+Edit `main.py` and put the following requires at the very top:
+
+```py
+import gi
+gi.require_version('Gdk', '3.0')
+```
