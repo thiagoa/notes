@@ -58,7 +58,7 @@
     - Keyboard -> Key Repeat -> set to Fastest
     - Keyboard -> Delay Until Repeat -> set to Shortest
     - Shortcuts -> (add) App Shortcuts -> Menu title: Zoom -> Keyboard shortcut: Cmd + Shift + =
-    - Shortcuts -> Input Sources -> Disable or remap any Ctrl + space (maybe disable), Cmd + shift + 3 (maybe Cmd + shift + 6) and Cmd + shift + 8 (maybe Cmd + shift + 9) keybindings to free that up for Emacs
+    - Shortcuts -> Input Sources -> Disable or remap any Ctrl + space (maybe disable), Cmd + shift + 3 (maybe Cmd + shift + 6, 8, 9) keybindings to free that up for Emacs
   - Touch ID
     - Add fingerprint for the second hand
 - Security & Privacy:
