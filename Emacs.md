@@ -844,3 +844,16 @@ Compilation:
 ### Inserting a code block in org mode
 
 `C-c C-,`
+
+### Forge
+
+- `N` - `forge-dispatch` - Access to forge commands
+- `forge-pull` or `fn` or `Nff`
+- `forge-add-repository` or `Na` to add a repo to the DB and `forge-pull-topic` to add individual topics (i.e., fetch a single pull request)
+- `forge-branch-pullreq` or `bN` - Configure a branch from a pull request
+- `forge-checkout-pullreq` or `bn` - Same as `forge-branch-pullreq` but also checkouts the branch (usually preferred)
+- `Nb?` - `Nb` is the prefix for forge-browse, which opens stuff in the browser (pull requests, issues, etc).
+- `Nv` - `Nv` visits stuff inside of forge. It's like `Nb` but does not open in the browser.
+- `forge-list-assigned-pullreqs`
+- `forge-list-requested-reviews`
+- `forge-list-authored-pullreqs`
