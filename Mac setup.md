@@ -8,6 +8,18 @@
   - Dropbox
   - OneDrive
   - Alfred
+  - iTerm
+    - Preferences -> Appearance -> General -> Theme -> Minimal
+    - Preferences -> Profiles -> Text -> Font -> set 14pt
+    - Preferences -> Profiles -> Configure Hotkey Window
+      - Hotkey: ⌥]
+      - Check: Animate show and hiding
+      - Check: Floating window
+    - Preferences -> Profiles -> Window -> Space -> set to All spaces
+  - Install SF Mono
+    - Open finder, go to /Applications/Utilities/Terminal.app/Contents/Resources/Fonts/
+    - Select all fonts, hit Cmd + o to install
+    - Change iTerm font to SF Mono
   - Emacs (install via homebrew - see below)
     - Change Emacs icon (see dotfiles)
     - To avoid Ruby script errors:
