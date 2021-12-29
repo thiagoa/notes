@@ -1,5 +1,15 @@
 ## Mount a luks drive that mysteryously does not want to mount
 
+Still need to review these steps.
+
+```bash
+$ cat /proc/mounts # Find the drive
+$ sudo umount /dev/mapper/...
+$ sudo dmsetup ls --tree
+$ ls -l /dev/mapper # Look for the real device, not the symlink
+$ sudo dmsetup remove /dev/...
+```
+
 ## Nautilus shortcuts
 
 - F6 - Alternate between sidebar and main pane
@@ -19,16 +29,6 @@
 Autokey new features:
 
 https://github.com/autokey/autokey/blob/master/new_features.rst
-
-Still need to review these steps.
-
-```bash
-$ cat /proc/mounts # Find the drive
-$ sudo umount /dev/mapper/...
-$ sudo dmsetup ls --tree
-$ ls -l /dev/mapper # Look for the real device, not the symlink
-$ sudo dmsetup remove /dev/...
-```
 
 ## Pinning a window to all workspaces
 
@@ -75,3 +75,34 @@ Edit `main.py` and put the following requires at the very top:
 import gi
 gi.require_version('Gdk', '3.0')
 ```
+
+## Create luks partitions
+
+```sh
+sudo cryptsetup -v -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat /dev/nvme0n1p2
+sudo cryptsetup -v -y -c aes-xts-plain64 -s 512 -h sha512 -i 5000 --use-random luksFormat /dev/nvme0n1p3
+sudo cryptsetup luksOpen /dev/nvme0n1p2 root-luks
+sudo cryptsetup luksOpen /dev/nvme0n1p3 home-luks
+sudo mkfs.ext4 /dev/mapper/root-luks
+sudo mkfs.ext4 /dev/mapper/home-luks
+```
+
+Opening and mounting the devices:
+
+The previous steps will implicitly open the devices, otherwise you can run these commands:
+
+```sh
+sudo cryptsetup luksOpen /dev/nvme0n1p2
+sudo cryptsetup luksOpen /dev/nvme0n1p3
+```
+
+And then these ones:
+
+```sh
+sudo mount /dev/mapper/root-luks /mnt/root-luks
+sudo mount /dev/mapper/home-luks /mnt/home-luks
+
+sudo umount /mnt/root-luks
+sudo umount /mnt/home-luks
+sudo cryptsetup luksClose /dev/mapper/root-luks
+sudo cryptsetup luksClose /dev/mapper/home-luks
