@@ -4,7 +4,7 @@
 - Download:
   - 1Password
     - Go to Safari app -> Preferences -> Extensions -> enable 1Password
-    - Clear Command + \ shorcut for Emacs, which corresponds to Meta + \ there
+    - Clear `Command + \` shorcut for Emacs, which corresponds to `Meta + \` in Emacs (because I have `Meta` mapped to `Command` in Emacs)
   - Dropbox
   - OneDrive
   - Alfred
@@ -23,14 +23,14 @@
   - Emacs (install via homebrew - see below)
     - Change Emacs icon (see dotfiles)
     - To avoid Ruby script errors:
-      - sudo chmod go-w "/Applications/Emacs.app/Contents/MacOS"
-      - sudo chmod go-w /Applications/Emacs.app/Contents/MacOS/bin-arm64-12
-      - sudo chmod go-w /Applications/Emacs.app/Contents
-      - sudo chmod go-w /Applications/Emacs.app
-      - sudo chmod go-w /Applications/Emacs.app/Contents/MacOS/libexec-arm64-12
+      - `sudo chmod go-w "/Applications/Emacs.app/Contents/MacOS"`
+      - `sudo chmod go-w /Applications/Emacs.app/Contents/MacOS/bin-arm64-12`
+      - `sudo chmod go-w /Applications/Emacs.app/Contents`
+      - `sudo chmod go-w /Applications/Emacs.app`
+      - `sudo chmod go-w /Applications/Emacs.app/Contents/MacOS/libexec-arm64-12`
     - To globally install Rubocop:
-      - asdf global ruby system
-      - sudo gem install rubocop
+      - `asdf global ruby system`
+      - `sudo gem install rubocop`
   - VS Code
   - Slack
   - Spotify
@@ -46,15 +46,15 @@
   - Google Chrome (for capybara)
   - Karabiner-elements
     - If karabiner_grabber and karabiner_observer don't show up on Security & Privacy -> Input Monitoring, add them manually:
-      - /Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_grabber
-      - /Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_observer
+      - `/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_grabber`
+      - `/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_observer`
   - Grammarly for Safari (App store)
   - Twitter (App store)
   - Xcode (App store)
   - Microsoft TODO (App store)
   - WhatsApp (App store)
   - Unclutter (App store)
-  - Módulos de segurança
+  - Módulo de segurança
 - Accept xcode license in the terminal:
   - sudo xcodebuild -license
 - Add internet accounts
@@ -69,18 +69,19 @@
   - Keyboard
     - Keyboard -> Key Repeat -> set to Fastest
     - Keyboard -> Delay Until Repeat -> set to Shortest
-    - Shortcuts -> (add) App Shortcuts -> Menu title: Zoom -> Keyboard shortcut: Cmd + Shift + =
-    - Shortcuts -> Input Sources -> Disable or remap any Ctrl + space (maybe disable), Cmd + shift + 3 (maybe Cmd + shift + 6, 8, 9) keybindings to free that up for Emacs
+    - Shortcuts -> (add) App Shortcuts -> Menu title: Zoom -> Keyboard shortcut: `Cmd + Shift + =`
+    - Shortcuts -> Input Sources -> Disable or remap any `Ctrl + space` (maybe disable), `Cmd + shift + 3` (maybe `Cmd + shift + 6, 8, 9`) keybindings to free that up for Emacs
+    - Shortcuts -> Mission Control -> Mission Control: `Cmd + Tab`
   - Touch ID
     - Add fingerprint for the second hand
 - Security & Privacy:
-  - Full Disk Access -> add Emacs and /usr/bin/ruby
+  - Full Disk Access -> add Emacs and `/usr/bin/ruby`
 - Users -> Edit my user's picture
 - Disable accented characters - **log back in to apply**
   - defaults write -g ApplePressAndHoldEnabled -bool false
 - Clone and install dotfiles:
-        git clone https://github.com/thiagoa/dotfiles.git ~/.dotfiles
-        ~/.dotfiles/setup.sh
+  - `git clone https://github.com/thiagoa/dotfiles.git ~/.dotfiles`
+  - `~/.dotfiles/setup.sh`
 - Terminal, settings
   - Basic profile
     - Text -> change font to 14 points on MacBook Air
@@ -88,6 +89,7 @@
     - Keyboard -> check Use Option as Meta key
 - Safari, settings
   - Tabs -> check Compact
+- Tuple
 
 ## Others
 
@@ -139,3 +141,11 @@ https://stackoverflow.com/questions/38732822/compile-chromedriver-on-arm
 Selenium::WebDriver::Chrome::Service.driver_path = "/home/thiago/.webdrivers/chromedriver"
 ```
 
+Install authy plugin (Go):
+
+```sh
+go install github.com/momaek/authy@latest
+asdf reshim go
+```
+
+Install [authy Alfred plugin](https://github.com/momaek/authy). Edit workflow and change executable to `~/.asdf/shims/authy`
