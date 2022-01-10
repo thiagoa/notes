@@ -28,6 +28,7 @@
     - Go to "Advanced" -> "Profile termination behavior" -> Check "Close when process exits, fails, or crashes"
     - Go to "Appearance" -> "Cursor" -> Check "Filled box""
     - Go to "Appearance" -> "Font size" -> Maybe change
+    - Go to "Actions" -> "Summon Quake Window" -> Set `Win + [`
   - Go to "Settings -> Startup" -> Check "Default Profile: Ubuntu"
 
 ## General settings
@@ -94,6 +95,7 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
 - Authy
 - Slack
 - VS Code
+  - Enable sync
 - Emacs (installed by dotfiles)
   - Explicitly define UI font in `~/.emacs.custom.before.el`:
     - `(defvar my-default-font "DejaVu Sans Mono 14")`
