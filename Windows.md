@@ -1,6 +1,36 @@
 # Windows 11 Configuration Notes
 
-### General settings
+## Preliminary apps
+
+- 1Password
+  - Go to Settings -> Keyboard Shortcuts
+  - Set the following shortcuts (uses the same shortcuts as my Linux setup):
+    - Show 1Password: `Ctrl + Alt + Shift + /`
+    - Show 1Password mini: `Ctrl + Alt + /`
+- Dropbox
+- aText (Microsoft Store to get Pro version)
+  - Go to "Preferences"
+    - Sync -> Sync location -> You know what
+    - Sync -> On
+    - Check "Start aText automatically when I sign in to Windows"
+    - Check "Request Administrator privileges when auto-start"
+
+### Terminal installation
+
+- Run Windows Terminal as Administrator
+  - Run `wsl --list --online` to see available distros
+  - Run `wsl --install -d Ubuntu` to install Ubuntu
+  - Run `sudo apt update` and `sudo apt upgrade`
+  - Install dotfiles
+  - Go to "Settings -> Ubuntu
+    - Go to "General" -> "Starting directory" -> Set "/home/thiago"
+      - Remember that with my dotfiles setup, `Ctrl + Shift + d` opens a tab reusing the current tab's dir
+    - Go to "Advanced" -> "Profile termination behavior" -> Check "Close when process exits, fails, or crashes"
+    - Go to "Appearance" -> "Cursor" -> Check "Filled box""
+    - Go to "Appearance" -> "Font size" -> Maybe change
+  - Go to "Settings -> Startup" -> Check "Default Profile: Ubuntu"
+
+## General settings
 
 Disable any startup apps not needed
 
@@ -61,11 +91,6 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
   - Enable sync with "Bookmarks", "Extensions", "History", "Settings"
   - Go to `brave://extensions/shortcuts` -> "1Password - Password Manager"
     - Set "Activate the extension" -> `Alt + Period`
-- 1Password
-  - Go to Settings -> Keyboard Shortcuts
-  - Set the following shortcuts (uses the same shortcuts as my Linux setup):
-    - Show 1Password: `Ctrl + Alt + Shift + /`
-    - Show 1Password mini: `Ctrl + Alt + /`
 - Authy
 - Slack
 - VS Code
@@ -92,12 +117,6 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
   - Go to "Options -> View" and Uncheck "Hide extensions for known file types"
 - AutoHotkey
   - See scripts below
-- aText (Microsoft Store to get Pro version)
-  - Go to "Preferences"
-    - Sync -> Sync location -> You know what
-    - Sync -> On
-    - Check "Start aText automatically when I sign in to Windows"
-    - Check "Request Administrator privileges when auto-start"
 - Wox (DON'T DOWNLOAD)
   - Open wox.exe (which is in portable mode) from Dropbox
     - Go to "Hotkey", set `Alt + Space`
@@ -112,6 +131,7 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
   - Still need to explore and see what I will enable or not
 - Twitter (Microsoft Store)
 - WhatsApp (Microsoft Store)
+- Security modules
 
 ### Remapping the keyboard & AutoHotkey scripts
 
@@ -169,28 +189,13 @@ LCtrl & Enter::
   Send {Blind}^{Enter}
 ```
 
-#### Autostart scripts:
+### Autostart scripts:
 
 - Press `Win+R` and paste `%appdata%\Microsoft\Windows\Start Menu\Programs\Startup`
 - Click with the right button, "new", and "shortcut"
 - Select the first script to create a shortcut for it and then repeat the process for the others
 
 Create shortcuts for the scripts
-
-### Terminal settings
-
-- Run Windows Terminal as Administrator
-  - Run `wsl --list --online` to see available distros
-  - Run `wsl --install -d Ubuntu` to install Ubuntu
-  - Run `sudo apt update` and `sudo apt upgrade`
-  - Install dotfiles
-  - Go to "Settings -> Ubuntu
-    - Go to "General" -> "Starting directory" -> Set "/home/thiago"
-      - Remember that with my dotfiles setup, `Ctrl + Shift + d` opens a tab reusing the current tab's dir
-    - Go to "Advanced" -> "Profile termination behavior" -> Check "Close when process exits, fails, or crashes"
-    - Go to "Appearance" -> "Cursor" -> Check "Filled box""
-    - Go to "Appearance" -> "Font size" -> Maybe change
-  - Go to "Settings -> Startup" -> Check "Default Profile: Ubuntu"
 
 ## Settings for XPS
 
