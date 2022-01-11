@@ -106,3 +106,4 @@ sudo umount /mnt/root-luks
 sudo umount /mnt/home-luks
 sudo cryptsetup luksClose /dev/mapper/root-luks
 sudo cryptsetup luksClose /dev/mapper/home-luks
+```

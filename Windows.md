@@ -1,19 +1,30 @@
 # Windows 11 Configuration Notes
 
+## Preliminary settings
+
+- Settings -> Time & language -> Language & Region (Configuracoes -> Hora e idioma -> Idioma & regiao)
+  - Windows display language (Idioma de exibicao do Windows) -> English (United States)
+    - Move English up
+    - If you can't select English, move the existing English entry to
+      the lower bottom, uninstall English, and install it fully with
+      the language pack
+    - English makes it easier to troubleshoot on the web
+    - Remove ABNT2 layout if the keyboard is not ABNT
+
 ## Preliminary apps
 
 - 1Password
   - Go to Settings -> Keyboard Shortcuts
   - Set the following shortcuts (uses the same shortcuts as my Linux setup):
-    - Show 1Password: `Ctrl + Alt + Shift + /`
+    - Show 1Password: `Ctrl + Alt + Shift + .`
     - Show 1Password mini: `Ctrl + Alt + /`
+- Authy
 - Dropbox
 - aText (Microsoft Store to get Pro version)
   - Go to "Preferences"
     - Sync -> Sync location -> You know what
     - Sync -> On
     - Check "Start aText automatically when I sign in to Windows"
-    - Check "Request Administrator privileges when auto-start"
 
 ### Terminal installation
 
@@ -21,7 +32,9 @@
   - Run `wsl --list --online` to see available distros
   - Run `wsl --install -d Ubuntu` to install Ubuntu
   - Run `sudo apt update` and `sudo apt upgrade`
+- Run Windows Terminal as user
   - Install dotfiles
+  - Set it as the default terminal app
   - Go to "Settings -> Ubuntu
     - Go to "General" -> "Starting directory" -> Set "/home/thiago"
       - Remember that with my dotfiles setup, `Ctrl + Shift + d` opens a tab reusing the current tab's dir
@@ -35,10 +48,6 @@
 
 Disable any startup apps not needed
 
-- Settings -> Time & language -> Language & Region
-  - Windows display language -> English (United States)
-    - If you can't select English, uninstall English and install it fully with the language pack
-    - English makes it easier to troubleshoot on the web
 - `Windows + R` -> type "control keyboard" and `Enter`
   - Set "Repeat delay" and "Repeat rate" to max (i.e., short / fast)
 - Settings -> System -> Multitasking -> Desktops
@@ -67,7 +76,7 @@ Disable any startup apps not needed
 - Settings -> Gaming -> Game Mode -> Uncheck "Game Mode"
 - Settings -> Bluetooth & Devices -> Touchpad -> Taps
     - Uncheck "Tap with a single finger to single-click"
-    - Uncheck "Tap with a two fingers to right-click"
+    - Uncheck "Tap with two fingers to right-click"
 - Settings -> Click on the search bar (Find a setting) -> Type "Edit power plan" and click on the result
   - Click on "Change advanced power settings"
     - Expand "Processor power management"
@@ -79,6 +88,13 @@ Disable any startup apps not needed
 - Settings -> Personalization -> Start -> Folders
   - Add favorite folders to start menu
 - Press `Windows + v` and enable clipboard access
+- Press `Windows + i` to open settings, type "Language bar" and enter
+  - Click on "Input language hot keys"
+  - Set: "Between input languages" -> `Left alt + shift`
+  - Set everything else to `(None)`
+  - This seems to free up `Ctrl + shift + 0` for Emacs
+- Settings -> Display -> Night light
+  - Check "Set hours", and "Turn on" at "8 00 PM" and "Turn off" at "7 00 PM"
 
 ## Apps to install or configure
 
@@ -92,7 +108,6 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
   - Enable sync with "Bookmarks", "Extensions", "History", "Settings"
   - Go to `brave://extensions/shortcuts` -> "1Password - Password Manager"
     - Set "Activate the extension" -> `Alt + Period`
-- Authy
 - Slack
 - VS Code
   - Enable sync
@@ -183,12 +198,12 @@ Enter::RCtrl
 Save on `Dropbox\Aplicativos\keybindings.ahk`:
 
 ```ahk
-CapsLock & [::
-  Send {Control Up}{Esc}
+<#q::Send !{F4}
   Return
 
-LCtrl & Enter::
-  Send {Blind}^{Enter}
+LCtrl & [::
+  Send {Blind}{Control Up}{Esc}
+  Return
 ```
 
 ### Autostart scripts:
@@ -254,3 +269,7 @@ Pasting:
 ```sh
 powershell.exe Get-Clipboard
 ```
+
+### Cycling between desktop's Windows
+
+Press `Alt + esc`
