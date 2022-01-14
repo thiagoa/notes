@@ -2,14 +2,20 @@
 
 ## Preliminary settings
 
+Having English as the default language makes it easier to troubleshoot on the web and follow this guide.
+
 - Settings -> Time & language -> Language & Region (Configuracoes -> Hora e idioma -> Idioma & regiao)
-  - Windows display language (Idioma de exibicao do Windows) -> English (United States)
-    - Move English up
-    - If you can't select English, move the existing English entry to
-      the lower bottom, uninstall English, and install it fully with
-      the language pack
-    - English makes it easier to troubleshoot on the web
-    - Remove ABNT2 layout if the keyboard is not ABNT
+  - Windows display language (Idioma de exibicao do Windows) -> Select "English (United States)"
+    - Move English up in the priority
+    - Make sure English is installed with the full language pack.
+      - If not, move the English to the lower bottom, uninstall
+        English, and install it with the full language pack. After that,
+        move it up again.
+  - Click on the three dots of "Portuguese (Brazil)" -> Click on "Language options"
+    - Keyboards -> Click on the three dots of "Portuguese (Brazil ABNT)"
+      - Click on "Remove" (unless using an ABNT keyboard)
+    - Make sure "United States-International" is the alternate layout
+      to "US". There should only be two keyboard layouts.
 
 ## Preliminary apps
 
@@ -81,6 +87,10 @@ Disable any startup apps not needed
   - Click on "Change advanced power settings"
     - Expand "Processor power management"
     - Expand "Maximum processor state" -> On battery, type "80%" in place of "100%"
+    - Expand ""Sleep" -> "Allow wake timers" -> "Plugged in: Check "Disable" (do disable "On battery" as well)
+- Control Panel -> Hardware and Sound -> Power Options -> System Settings
+  - Click on "Change settings that are currently unavailable"
+    - Uncheck "Turn on fast startup (recommended)
   - Hit OK or Apply
 - Right click on the taskbar -> Taskbar settings
   - Disable Chat
@@ -103,7 +113,6 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
 - Logitech Options
   - Go to the mouse
     - Set Scrolling direction "Inverted"
-    - Disable SmartShift
 - Brave
   - Enable sync with "Bookmarks", "Extensions", "History", "Settings"
   - Go to `brave://extensions/shortcuts` -> "1Password - Password Manager"
@@ -149,6 +158,11 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
 - Twitter (Microsoft Store)
 - WhatsApp (Microsoft Store)
 - Security modules
+- Battery Percentage Icon: https://www.microsoft.com/en-us/p/battery-percentage-icon/9pckt2b7dzmw?activetab=pivot:overviewtab
+- Notepad++
+  - Settings -> Preferences -> General
+    - Toolbar -> Check "Hide"
+    - Check "Hide menu bar" (press Alt to access)
 
 ### Remapping the keyboard & AutoHotkey scripts
 
@@ -173,6 +187,18 @@ beneficial to avoid edge cases with dual-function Enter/RCtrl and `Ctrl + [`
 Save on `Dropbox\Aplicativos\AutoHotkey\dual_function_enter_control.ahk`:
 
 ```ahk
+#NoEnv
+SendMode Input
+
+Send {LCtrl Up}{RCtrl Up}
+
+LShift & Enter Up::
+  GetKeyState, state, Shift
+  if (A_PriorKey = "Enter" and state = "D") {
+    Send +{Enter}
+  }
+  Send {LCtrl Up}{RCtrl Up}
+  Return
 LCtrl & Enter Up::
   GetKeyState, state, Control
   if (A_PriorKey = "Enter" and state = "D") {
@@ -198,12 +224,59 @@ Enter::RCtrl
 Save on `Dropbox\Aplicativos\keybindings.ahk`:
 
 ```ahk
+#NoEnv
+SendMode Input
+
+Send {LCtrl Up}{RCtrl Up}
+Send {LWin Up}{RWin Up}
+
 <#q::Send !{F4}
   Return
 
 LCtrl & [::
   Send {Blind}{Control Up}{Esc}
   Return
+
+<#]::
+  Process, Exist, notepad++.exe
+  notepad_pid = %ErrorLevel%
+
+  if notepad_pid = 0
+    Run, "C:\Program files\Notepad++\notepad++.exe"
+
+  IfWinExist, ahk_pid %notepad_pid%
+  {
+    WinHide, ahk_pid %notepad_pid%
+  }
+  Else
+  {
+    DetectHiddenWindows, On
+    WinGet, id, list, ahk_pid %notepad_pid%
+
+    Loop, %id%
+    {
+      this_ID := id%A_Index%
+      WinGetTitle, title, ahk_id %this_ID%
+
+      If (title = "")
+        Continue
+ 
+      WinGetClass, class, ahk_id %this_ID%
+
+      if (class != "Notepad++")
+        Continue
+
+      WinGet, exStyle, exStyle, ahk_id %this_ID%
+
+      If !(exStyle & 0x100)
+        Continue
+
+      WinShow ahk_id %this_ID%
+      WinActivate ahk_id %this_ID%
+
+      Return
+    }
+  }
 ```
 
 ### Autostart scripts:
@@ -273,3 +346,10 @@ powershell.exe Get-Clipboard
 ### Cycling between desktop's Windows
 
 Press `Alt + esc`
+
+### Microsoft Mail shortcuts
+
+- `Ctrl + Shift + v` - Move message to folder
+- `Ctrl + y` - Go to folder
+- `Backspace` - Archive
+
