@@ -54,3 +54,10 @@ The solution is described [here](https://stackoverflow.com/questions/70081693/ho
 
 Download and install `libffi8_3.4.2-1ubuntu5_amd64.deb` from [here](https://packages.ubuntu.com/impish/amd64/libffi8/download).
 
+## Debugging gems to try
+
+- `Rack::Bug`
+- `MemoryLogic`
+- `Oink`
+
+Article: https://blog.engineyard.com/thats-not-a-memory-leak-its-bloat
