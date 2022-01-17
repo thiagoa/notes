@@ -107,3 +107,9 @@ sudo umount /mnt/home-luks
 sudo cryptsetup luksClose /dev/mapper/root-luks
 sudo cryptsetup luksClose /dev/mapper/home-luks
 ```
+
+## Problems with Redshift
+
+Redshift keeps toggling on and off on your laptop? It might be because Automatic Brightness is on
+
+In GNOME, go to Power -> Automatic Brightness and turn it off.
