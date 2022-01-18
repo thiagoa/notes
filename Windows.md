@@ -95,6 +95,9 @@ Disable any startup apps not needed
 - Right click on the taskbar -> Taskbar settings
   - Disable Chat
 - Pin apps & organize the taskbar to leverage `Win + number` shortcuts
+- System -> Power
+  - Set to "Balanced" on laptop
+  - Set to "Best performance" on desktop
 - Settings -> Personalization -> Start -> Folders
   - Add favorite folders to start menu
 - Press `Windows + v` and enable clipboard access
@@ -247,6 +250,7 @@ LCtrl & [::
   IfWinExist, ahk_pid %notepad_pid%
   {
     WinHide, ahk_pid %notepad_pid%
+    Send {Alt down}{tab}{Alt up}
   }
   Else
   {
