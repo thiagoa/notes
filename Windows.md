@@ -331,6 +331,8 @@ Any way to unmap that keybinding so that Emacs can take it?
 
 - How to stop apps from installing app icons on the desktop? Answer: not possible, but I'll keep this on my list.
 
+- `Win + q` AutoHotkey shortcut does not work when MS Edge is focused
+
 ## Tips
 
 ### Copying and pasting
