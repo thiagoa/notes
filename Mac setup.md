@@ -12,9 +12,9 @@
     - Preferences -> Appearance -> General -> Theme -> Minimal
     - Preferences -> Profiles -> Text -> Font -> set 14pt
     - Preferences -> Profiles -> Configure Hotkey Window
-      - Hotkey: ⌥]
+      - Hotkey: ⌥] (make sure only the two options below are checked)
+      - Check: Pin hotkey window (stays open on loss of keyboard focus)
       - Check: Animate show and hiding
-      - Check: Floating window
     - Preferences -> Profiles -> Window -> Space -> set to All spaces
   - Install SF Mono
     - Open finder, go to /Applications/Utilities/Terminal.app/Contents/Resources/Fonts/
