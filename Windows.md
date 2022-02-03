@@ -157,7 +157,10 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
     - Check "Everything service" (to avoid Windows permission prompt)
     - Uncheck "Run as administrator"
 - PowerToys
-  - Still need to explore and see what I will enable or not
+  - Keyboard manager -> Enable Keyboard Manager -> Toggle "On"
+  - Keyboard manager -> Remap a shortcut.
+    - `Ctrl (Left) + Shift + 0` => `Ctrl (left) + F11` (to make `paredit-forward-slurp-sexp` work in my Emacs setup)
+    - `Win (Left) + Alt (Left) + Space` => `Ctrl (left) + F12` (to make `mark-word` work in my Emacs setup)
 - Twitter (Microsoft Store)
 - WhatsApp (Microsoft Store)
 - Security modules
@@ -204,8 +207,15 @@ LShift & Enter Up::
   Return
 LCtrl & Enter Up::
   GetKeyState, state, Control
+  GetKeyState, altState, Alt
   if (A_PriorKey = "Enter" and state = "D") {
-    Send ^{Enter}
+    if (altState = "D") {
+      Send ^!{Enter}
+      Send {LAlt Up}{RAlt Up}
+    }
+    else {
+      Send ^{Enter}
+    }
   }
   Send {LCtrl Up}{RCtrl Up}
   Return
@@ -319,9 +329,6 @@ This is a tip for sensible people.
 
 - Currently, there seems to be no way to change the WSL GUI penguim
   icon.
-
-- `Ctrl+Shift+0` is taken by the OS: https://github.com/microsoft/vscode/issues/2585
-Any way to unmap that keybinding so that Emacs can take it?
 
 - WSL GUI Clipboard integration is not working. When I copy something
   from Emacs or use `xclip`, I'd expect it to work.
