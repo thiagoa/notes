@@ -19,6 +19,8 @@ Having English as the default language makes it easier to troubleshoot on the we
 
 ## Preliminary apps
 
+- Fluent Search
+  - TODO: Document
 - 1Password
   - Go to Settings -> Keyboard Shortcuts
   - Set the following shortcuts (uses the same shortcuts as my Linux setup):
@@ -54,6 +56,9 @@ Having English as the default language makes it easier to troubleshoot on the we
 
 Disable any startup apps not needed
 
+- Run Windows 10 debloater UI
+  - https://github.com/LeDragoX/Win10SmartDebloat
+  - TODO: Add steps here
 - `Windows + R` -> type "control keyboard" and `Enter`
   - Set "Repeat delay" and "Repeat rate" to max (i.e., short / fast)
 - Settings -> System -> Multitasking -> Desktops
