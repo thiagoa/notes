@@ -203,12 +203,20 @@ SendMode Input
 
 Send {LCtrl Up}{RCtrl Up}
 
+#!Enter::
+  Send, {Alt down}{Win down}{Enter}{Alt up}{LWin up}
+  Return
 LShift & Enter Up::
-  GetKeyState, state, Shift
-  if (A_PriorKey = "Enter" and state = "D") {
+  GetKeyState, controlState, LCtrl
+
+  if (A_PriorKey = "Enter" and controlState = "D") {
+    Send !+{Enter}
+  }
+  else {
     Send +{Enter}
   }
   Send {LCtrl Up}{RCtrl Up}
+  Send {LShift Up}{RShift Up}
   Return
 LCtrl & Enter Up::
   GetKeyState, state, Control
@@ -226,8 +234,15 @@ LCtrl & Enter Up::
   Return
 LAlt & Enter Up::
   GetKeyState, state, Alt
+  GetKeyState, winState, LWin
   if (A_PriorKey = "Enter" and state = "D") {
-    Send !{Enter}
+    if (winState = "D") {
+      Send #!{Enter}
+      Send {LWin Up}{LWin Up}
+    }
+    else {
+      Send !{Enter}
+    }
   }
   Send {LCtrl Up}{RCtrl Up}
   Send {LAlt Up}{RAlt Up}
