@@ -121,6 +121,11 @@ All these apps can be pinned to the taskbar, except apps that are fired by short
 - Logitech Options
   - Go to the mouse
     - Set Scrolling direction "Inverted"
+- [TrackballScroll.exe](https://github.com/Seelge/TrackballScroll/) (find it in `~/Dropbox/bin`)
+  - Add a shortcut to `%appdata%\Microsoft\Windows\Start Menu\Programs\Startup`
+  - Make sure that the Forward and Back buttons are assigned to their
+    original functions in Logitech Options, otherwise this app won't
+    work properly
 - Brave
   - Enable sync with "Bookmarks", "Extensions", "History", "Settings"
   - Go to `brave://extensions/shortcuts` -> "1Password - Password Manager"
