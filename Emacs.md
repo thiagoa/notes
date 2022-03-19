@@ -858,6 +858,41 @@ Compilation:
 - `forge-list-requested-reviews`
 - `forge-list-authored-pullreqs`
 
+### Web mode
+
+`C-c C-n` - Jump between open and close tags
+`M-;` - Comment / uncomment
+`C-c C-m` - Expand selection
+`C-c C-s` - Insert snippet (ex: html5)
+
+`C-c C-e n/p` - Next and previous tag
+`C-c C-e i` - Insert HTML tag
+`C-c C-e k` - Kill tag
+`C-c C-e r` - Rename element
+`C-c C-e t` - Transpose tag
+`C-c C-e u` - Go to parent element
+`C-c C-e d` - Go to child element
+`C-c C-e w` - Wrap selection (does not require selection) in tag
+`C-c C-e s` - Select element
+`C-c C-e v` - Element vanish (delete element)
+`C-c C-e c` - Duplicate element down below
+
+`C-c C-a i` - Insert HTML attribute (must be inside tag)
+`C-c C-a n/p` - Next and previous attribute
+`C-c C-a k` - Kill attribute
+`C-c C-a t` - Transpose attribute
+...
+
+`C-c C-t ...` - Same pattern, but for tags
+
 ### Notes, possibly future TODOs
 
 - `C-x C-q` does not work on minitest's compilation buffer
+
+### Live edit HTML
+
+Use `impatient-mode`:
+
+- `httpd-server`
+- `impatient-mode`
+- Go to http://localhost:8080/imp/
