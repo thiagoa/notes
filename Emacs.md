@@ -857,3 +857,7 @@ Compilation:
 - `forge-list-assigned-pullreqs`
 - `forge-list-requested-reviews`
 - `forge-list-authored-pullreqs`
+
+### Notes, possibly future TODOs
+
+- `C-x C-q` does not work on minitest's compilation buffer
