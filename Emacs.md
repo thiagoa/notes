@@ -25,6 +25,11 @@ Some of these commands are specific to my configuration.
 
 ## Helm
 
+In any helm buffer or file dialog:
+
+- `C-u C-c o` - Open buffer in horizontal window
+- `C-c o` - Open buffer in vertical window
+
 ### helm-buffers-list
 
 Search for buffers by major mode:
