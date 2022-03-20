@@ -1,6 +1,6 @@
 # Emacs
 
-**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized and distributed.
+**WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized.
 
 https://github.com/clojure-emacs/cider/blob/master/doc/interactive_programming.md
 
