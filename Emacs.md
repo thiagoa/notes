@@ -901,3 +901,49 @@ Use `impatient-mode`:
 - `httpd-server`
 - `impatient-mode`
 - Go to http://localhost:8080/imp/
+
+## Installing Emacs on M1
+
+```
+brew tap daviderestivo/emacs-head
+brew install emacs-head@28 --with-cocoa --with-native-comp
+```
+
+The package I used before, `emacs-plus` is no longer working with
+nativecomp. I used to install it with:
+
+```
+brew reinstall emacs-plus@28 --with-native-comp
+```
+
+## Running terminals on Ruby 3.1 / M1 macs
+
+A dirty workaround, the only line with a hack is the one that has
+`/emacs/`, so open up the file and replace it:
+
+```
+# ~/.asdf/installs/ruby/3.1.1/lib/ruby/gems/3.1.0/gems/reline-0.3.1/lib:
+
+require 'reline/general_io'
+if RbConfig::CONFIG['host_os'] =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+  require 'reline/windows'
+  if Reline::Windows.msys_tty?
+    Reline::IOGate = if ENV['TERM'] == 'dumb'
+      Reline::GeneralIO
+    else
+      require 'reline/ansi'
+      Reline::ANSI
+    end
+  else
+    Reline::IOGate = Reline::Windows
+  end
+else
+  Reline::IOGate = unless ENV["TERM"] =~ /emacs/
+    require 'reline/ansi'
+    Reline::ANSI
+  else
+    Reline::GeneralIO
+  end
+end
+Reline::HISTORY = Reline::History.new(Reline.core.config)
+```
