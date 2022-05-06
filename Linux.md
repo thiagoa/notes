@@ -113,3 +113,14 @@ sudo cryptsetup luksClose /dev/mapper/home-luks
 Redshift keeps toggling on and off on your laptop? It might be because Automatic Brightness is on
 
 In GNOME, go to Power -> Automatic Brightness and turn it off.
+
+## Scaling GDM in 4k monitors
+
+```sh
+sudo apt install systemd-container
+sudo machinectl shell gdm@ /bin/bash
+
+# Or whatever scaling factor you want
+settings set org.gnome.desktop.interface text-scaling-factor 1.8
+```
+
