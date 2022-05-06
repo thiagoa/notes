@@ -887,7 +887,7 @@ libcares.a(libcares_la-ares__get_hostent.o):
 - Among other files, this archive contains
   `libcares_la-ares__close_sockets.o` and
   `libcares_la-ares__get_hostent.o`;
-- `ares__close_sockets` is a functio within
+- `ares__close_sockets` is a function within
   `libcares_la-ares__close_sockets.o`. Anything prefixed with `T _` is
   a function.
 - An archive file must be prefixed with `lib` because they are static

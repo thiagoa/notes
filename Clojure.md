@@ -222,7 +222,7 @@ Grabbing the `doc` function:
 [1 2 3] ;; Prints [1 2 ...] in the REPL
 ```
 
-### Last commands
+### REPL Last commands
 
 `*1`, `*2`, `*3`, `*e` for last exception
 

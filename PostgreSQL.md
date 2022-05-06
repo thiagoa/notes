@@ -1,5 +1,9 @@
 # PostgreSQL
 
+## To remember
+
+- Pattern matching with `SIMILAR TO`: https://postgresweekly.com/link/92192/ef08820b5c
+
 ## [Full-Text Search](https://www.compose.com/articles/mastering-postgresql-tools-full-text-search-and-phrase-search/)
 
 - `tsvector` - What you query against

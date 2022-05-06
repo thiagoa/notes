@@ -2,6 +2,8 @@
 
 **WARNING**: This part is a mess. As the name implies, it's a staging area, so it needs to be organized.
 
+`C-c C-, s` - Insert source block in org mode
+
 https://github.com/clojure-emacs/cider/blob/master/doc/interactive_programming.md
 
 https://stackoverflow.com/questions/163591/bash-autocompletion-in-emacs-shell-mode
@@ -95,9 +97,11 @@ Match by directory name:
 
 Dired commands:
 
-| Keybinding | Command | Description     |
-|------------|---------|-----------------|
-| R          | -       | Rename the file |
+| Keybinding | Command           | Description       |
+|------------|-------------------|-------------------|
+| R          | dired-do-rename   | Rename the file   |
+| t          | dired-toggle-mark | Toggle marks      |
+| u          | dired-unmark      | Unmark everything |
 
 ## Window
 
