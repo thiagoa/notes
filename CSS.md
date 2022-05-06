@@ -578,3 +578,60 @@ Available classes: same classes from hover.
 
 Examples: `.md:hover:bg-blue-500`, `.md:focus:bg-gray-200`, `md:hover:text-orange-300`, etc.
 
+-----------------
+
+## Other tips
+
+### Display inline
+
+With display inline:
+
+- `width` and `height` will no longer be efective
+- Elements turn into words and there will be word spacing between them
+
+### Display block
+
+With display block
+
+- When you don't set a width, the element occupies 100%
+
+### Display inline-block
+
+- Allows setting width and height.
+
+- Can use `text-align: justify` to center a line of elements
+  proportionally. However, `justify` will never justify the last line,
+  which is the case when there is only one line. How to solve it? Add
+  an extra invisible line with CSS occupying the full width:
+
+```css
+.container {
+  text-align: justify;
+}
+
+.container::after {
+  content: '';
+  display: inline-block;
+  width: 100%;
+}
+
+.item {
+  display: inline-block;
+  width: 25%;
+}
+```
+
+This could be solved by adding another `.item` with HTML, but it is
+not a good thing to do.
+
+### Margin
+
+- `margin-left: auto` will pull the element to the outmost right. 
+
+- If you have a block element with `width: 50%`, you can use
+  `margin-left: 50%` with the same effect. However, if you change
+  `width` to something else you will have to adjust `margin-left`.
+  That's the value of `auto`.
+
+- `margin-left: auto` and `margin-right: auto` together will center
+  the block element (if it has a width).
