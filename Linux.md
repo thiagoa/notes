@@ -124,3 +124,22 @@ sudo machinectl shell gdm@ /bin/bash
 settings set org.gnome.desktop.interface text-scaling-factor 1.8
 ```
 
+## Install OpenSSL 1.1 on Ubuntu Impish to compile old versions of Ruby
+
+```sh
+$ sudo apt install build-essential checkinstall zlib1g-dev
+$ cd ~/Downloads
+$ wget https://www.openssl.org/source/openssl-1.1.1n.tar.gz
+$ tar xf openssl-1.1.1n.tar.gz
+$ cd ~/Downloads/openssl-1.1.1n
+$ ./config --prefix=/opt/openssl-1.1.1n --openssldir=/opt/openssl-1.1.1n shared zlib
+$ make
+$ make test
+$ sudo make install
+$ sudo rm -rf /opt/openssl-1.1.1n/certs
+$ sudo ln -s /etc/ssl/certs /opt/openssl-1.1.1n
+$ RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl-1.1.1n rbenv install VERSION
+$ export RUBY_CONFIGURE_OPTS="--with-openssl-dir=/opt/openssl-1.1.1n/"
+```
+
+Source: https://github.com/rbenv/ruby-build/discussions/1940#discussioncomment-2663209
