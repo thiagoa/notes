@@ -920,6 +920,34 @@ nativecomp. I used to install it with:
 brew reinstall emacs-plus@28 --with-native-comp
 ```
 
+**UPDATE**: 28.1 was not working, so I installed Emacs 29 and solved
+the problem with:
+
+- `brew uninstall gcc libgccjit head-emacs@28`
+- `brew install gcc libgccjit head-emacs@29`
+
+If I still run into problems, I may try:
+
+```
+Native complitation requires the libgccjit library to be installed and
+its path available to Emacs.  Errors such as:
+
+    libgccjit.so: error: error invoking gcc driver
+    Error: Internal native compiler error failed to compile
+
+indicate Emacs can't find the library in running time.  One can set
+the "LIBRARY_PATH" environment variable in the early initalization
+file; for example:
+
+(setenv "LIBRARY_PATH"
+  (string-join
+    '("/usr/local/opt/gcc/lib/gcc/11"
+      "/usr/local/opt/libgccjit/lib/gcc/11"
+      "/usr/local/opt/gcc/lib/gcc/11/gcc/x86_64-apple-darwin20/11.2.0") ":"))
+```
+
+Source: https://github.com/emacs-mirror/emacs/blob/f56408a6f0152cd46d1ea8a0985fbfeeb839ea06/etc/PROBLEMS#L2772
+
 ## Running terminals on Ruby 3.1 / M1 macs
 
 A dirty workaround, the only line with a hack is the one that has
