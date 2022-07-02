@@ -143,3 +143,11 @@ $ export RUBY_CONFIGURE_OPTS="--with-openssl-dir=/opt/openssl-1.1.1n/"
 ```
 
 Source: https://github.com/rbenv/ruby-build/discussions/1940#discussioncomment-2663209
+
+## Fix a luks partition slow to decrypt
+
+Change iter-time:
+
+```sh
+sudo cryptsetup -v luksChangeKey --iter-time 500 /dev/<partition>
+```
