@@ -151,3 +151,18 @@ Change iter-time:
 ```sh
 sudo cryptsetup -v luksChangeKey --iter-time 500 /dev/<partition>
 ```
+
+## Fix full screen video with fractional scaling
+
+When fractional scaling is enabled and running a full screen video,
+GNOME keeps trying to refresh the resolution. I went through the
+following threads:
+
+https://bugs.launchpad.net/ubuntu/+source/gnome-shell/+bug/1863391
+https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1862081
+https://bugs.launchpad.net/ubuntu/+source/mutter/+bug/1890141
+
+The solution was to install the "Disable unredirect fullscreen
+windows" extension:
+
+https://extensions.gnome.org/extension/1873/disable-unredirect-fullscreen-windows/
