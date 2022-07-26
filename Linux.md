@@ -138,7 +138,7 @@ $ make test
 $ sudo make install
 $ sudo rm -rf /opt/openssl-1.1.1n/certs
 $ sudo ln -s /etc/ssl/certs /opt/openssl-1.1.1n
-$ RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl-1.1.1n rbenv install VERSION
+$ RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl-1.1.1n asdf install ruby VERSION
 $ export RUBY_CONFIGURE_OPTS="--with-openssl-dir=/opt/openssl-1.1.1n/"
 ```
 
