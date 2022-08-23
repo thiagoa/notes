@@ -133,6 +133,12 @@ brew install -s ruby-build
 asdf install ruby 3.0.3
 ```
 
+For problems with the `ffi` gem:
+
+```sh
+RUBY_CFLAGS=-DUSE_FFI_CLOSURE_ALLOC
+```
+
 Unofficial Chromedrivers for Linux arm64:
 
 https://stackoverflow.com/questions/38732822/compile-chromedriver-on-arm
